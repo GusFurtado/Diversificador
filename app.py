@@ -1,4 +1,5 @@
 import dash
+from dash.dependencies import Output, Input
 import dash_bootstrap_components as dbc
 
 import layout
@@ -20,6 +21,16 @@ app = dash.Dash(
 
 app.title = 'Diversificador de Carteira'
 app.layout = layout.layout
+
+
+
+@app.callback(
+    Output('main_graph', 'figure'),
+    Input('ticker_input', 'value'),
+    Input('checkbox', 'checked'),
+    prevent_initial_call = True)
+def selecionar_ticker(ticker, check):
+    return utils.timeline(ticker, check)
 
 
 
