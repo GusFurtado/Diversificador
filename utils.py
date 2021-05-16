@@ -1,6 +1,3 @@
-import flask
-import pandas as pd
-import plotly.graph_objects as go
 import yfinance
 
 
@@ -19,8 +16,6 @@ class Ticker:
 
     Attributes
     ----------
-    history : pandas.Series
-        Histórico de cotações do ticker.
     info : dict
         Conjunto completo de informações do ticker.
     name : str
@@ -34,25 +29,21 @@ class Ticker:
     '''
 
     def __init__(self, ticker:str, b3=True):
-
         if b3:
             ticker = f'{ticker}.SA'
-            
         t = yfinance.Ticker(ticker)
-        self.ticker = ticker
-        self.ticker_class = t
         self.info = t.info
-        self.name = t.info['longName']
+        self.name = t.info['longName'] if 'longName' in t.info else t.info['shortName']
         self.currency = t.info['currency']
         self.logo = t.info['logo_url']
 
 
-    def get_history(self):
-        df = self.ticker_class.history(
-            period = '5y',
-            interval = '1mo',
-            auto_adjust = True
-        )
-        df = df.loc[df.Volume > 0, 'Close']
 
-        flask.session[self.ticker] = df
+def get_data(ticker):
+    t = yfinance.Ticker(ticker)
+    df = t.history(
+        period = '5y',
+        interval = '1mo',
+        auto_adjust = True
+    )
+    return df.loc[df.Volume > 0, 'Close']

@@ -4,29 +4,61 @@ import dash_html_components as html
 
 
 
+jumbotron = dbc.Jumbotron(
+    dbc.Container([
+        html.H1(
+            'Diversificador de Portfolio',
+            className = 'display-3'
+        ),
+        html.P(
+            'Escolha os tickers da sua carteira e clique em "Analisar carteira".',
+            className = 'lead',
+        )
+    ],
+        fluid = True,
+    ),
+    fluid = True,
+)
+
+
+
 def table_row(uid:int):
+
+    def _table_data(children):
+        return html.Td(
+            html.Div(
+                children,
+                className = 'table_data'
+            )
+        )
+
     return html.Tr([
-        html.Td(
+        _table_data(
             dbc.Checkbox(
                 checked = True,
                 id = {'type': 'checkbox', 'row': uid}
             )
         ),
-        html.Td(
+        _table_data(
             dbc.Input(
-                id = {'type': 'input', 'row': uid},
-                debounce = True
+                debounce = True,
+                id = {'type': 'input', 'row': uid}
             )
         ),
-        html.Td(
-            id = {'type': 'name', 'row': uid}
+        _table_data(
+            dcc.Loading(
+                html.Div(
+                    id = {'type': 'name', 'row': uid}
+                ),
+                type = 'dot'
+            )
         )
     ])
 
 
 
 main_content = [
-    html.H1('Escolha os tickers:'),
+    jumbotron,
     dbc.Table([
         html.Thead([
             html.Th(th) for th in ['🇧🇷', 'Ticker', 'Nome']
@@ -36,11 +68,28 @@ main_content = [
             id = 'table_body'
         )
     ]),
-    dbc.Button(
-        '(+) Adicionar ticker',
-        color = 'primary',
-        size = 'sm',
-        id = 'new_ticker_button'
+    dbc.Row([
+        dbc.Col(
+            dbc.Button(
+                '(+) Adicionar ticker',
+                color = 'primary',
+                size = 'sm',
+                id = 'new_ticker_button'
+            ),
+            width = 'auto'
+        ),
+        dbc.Col(
+            dbc.Button(
+                '(>) Analisar carteira',
+                color = 'success',
+                size = 'sm',
+                id = 'analyse_portfolio_button'
+            ),
+            width = 'auto'
+        ),
+    ],
+        justify = 'between',
+        style = {'margin-bottom': 20}
     )
 ]
 

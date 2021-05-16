@@ -21,7 +21,6 @@ app = dash.Dash(
 
 app.title = 'Diversificador de Carteira'
 app.layout = layout.layout
-app.server.secret_key = 'TEMP_KEY'
 
 
 
@@ -31,7 +30,6 @@ app.server.secret_key = 'TEMP_KEY'
     Input({'type': 'checkbox', 'row': MATCH}, 'checked'),
     prevent_initial_call = True)
 def set_name(input, check):
-    print(dash.callback_context.triggered)
     try:
         t = utils.Ticker(input, check)
         return t.name

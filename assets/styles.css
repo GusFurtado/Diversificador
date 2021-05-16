@@ -1,3 +1,11 @@
 body {
     font-family: 'Montserrat';
 }
+
+
+
+.table_data {
+    display: flex;
+    align-items: center;
+    height: 40px;
+}
