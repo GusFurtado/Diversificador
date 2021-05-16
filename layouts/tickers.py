@@ -58,6 +58,7 @@ def table_row(uid:int):
 
 
 main_content = [
+    dcc.Location(id='location'),
     jumbotron,
     dbc.Table([
         html.Thead([
