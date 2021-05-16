@@ -4,44 +4,53 @@ import dash_html_components as html
 
 
 
-class Ticker:
+def get_name(ticker:str, b3:bool) -> str:
     '''
-    Captura as informações e histórico de cotações do ticker desejado.
+    Valida o ticker desejado e retorna seu nome.
 
     Parameters
     ----------
     ticker : str
-        Ticker da ação.
-    b3 : bool (default=True)
-        True, se for uma ação da B3.
+        Ticker desejado.
+    b3 : bool
+        True, se o ticker é negociado na B3;
         False, caso contrário.
 
-    Attributes
+    Returns
+    -------
+    str
+        Nome do ticker desejado.
+
+    -------------------------------------------------------------------------- 
+    '''
+
+    if b3:
+        ticker = f'{ticker}.SA'
+    try:
+        t = yfinance.Ticker(ticker)
+        return t.info['longName'] if 'longName' in t.info else t.info['shortName']
+    except:
+        return 'Ticker não encontrado'
+        
+
+
+def get_data(ticker:str) -> pd.DataFrame:
+    '''
+    Retorna o histórico de cotações do ticker desejado.
+
+    Parameters
     ----------
-    info : dict
-        Conjunto completo de informações do ticker.
-    name : str
-        Nome completo do ticker.
-    currency : str
-        Moeda da cotação.
-    logo : str
-        Logo do ticker.
+    ticker : str
+        Ticker desejado.
+
+    Returns
+    -------
+    pandas.core.frame.DataFrame
+        Histórico de fechamento do ticker desejado.
 
     --------------------------------------------------------------------------
     '''
 
-    def __init__(self, ticker:str, b3=True):
-        if b3:
-            ticker = f'{ticker}.SA'
-        t = yfinance.Ticker(ticker)
-        self.info = t.info
-        self.name = t.info['longName'] if 'longName' in t.info else t.info['shortName']
-        self.currency = t.info['currency']
-        self.logo = t.info['logo_url']
-
-
-
-def get_data(ticker):
     t = yfinance.Ticker(ticker)
     df = t.history(
         period = '5y',
@@ -52,7 +61,27 @@ def get_data(ticker):
 
 
 
-def get_url_hash(tickers, b3, names):
+def get_url_hash(tickers:list, b3:list, names:list) -> str:
+    '''
+    Converte os valores da tabela de inserção em uma lista de hashtags que
+    será enviada para a página de análises.
+
+    Parameters
+    ----------
+    tickers : list of str
+        Lista dos tickers nos campos de input de texto.
+    b3 : list of bool
+        Lista dos checkboxes.
+    names : list of str
+        Lista dos nomes validados pela função `get_names`.
+
+    Returns
+    -------
+    str
+        Lista de tickers formatada como argumentos de URL.
+
+    --------------------------------------------------------------------------
+    '''
     
     df = pd.DataFrame({
         'b3': b3,
@@ -72,6 +101,23 @@ def get_url_hash(tickers, b3, names):
 
 
 
-def load_report(hashtags):
+def load_report(hashtags:str) -> list:
+    '''
+    Captura as hashtags da URL e as utiliza como parâmetro para carregar o
+    relatório de análise de diversificação.
+
+    Parameters
+    ----------
+    hashtags : str
+        Hashtags capturadas da URL.
+
+    Returns
+    -------
+    list of Dash Components
+        Relatório de diversificação em formato HTML.
+
+    --------------------------------------------------------------------------
+    '''
+
     tickers = hashtags.split('#')
     return [html.P(ticker) for ticker in tickers]
