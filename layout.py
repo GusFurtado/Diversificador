@@ -4,30 +4,36 @@ import dash_html_components as html
 
 
 
-main_content = [
-    html.H1('Escolha um ticker:'),
-    dbc.Row([
-        dbc.Col([
-            dbc.Label('🇧🇷'),
+def table_row(uid:int):
+    return html.Tr([
+        html.Td(
             dbc.Checkbox(
-                checked=True,
-                id = 'checkbox'
-            )       
-        ],
-            width = 'auto'
+                checked = True,
+                id = {'type': 'checkbox', 'row': uid}
+            )
         ),
-        dbc.Col(
+        html.Td(
             dbc.Input(
-                id = 'ticker_input',
+                id = {'type': 'input', 'row': uid},
                 debounce = True
             )
         ),
-        dbc.Col(
-            dcc.Graph(
-                id = 'main_graph'
-            ),
-            width = 8
+        html.Td(
+            id = {'type': 'name', 'row': uid}
         )
+    ])
+
+
+
+main_content = [
+    html.H1('Escolha um ticker:'),
+    dbc.Table([
+        html.Thead([
+            html.Th(th) for th in ['🇧🇷', 'Ticker', 'Nome']
+        ]),
+        html.Tbody([
+            table_row(i) for i in ['teste1', 'teste2', 'teste3']
+        ])
     ])
 ]
 
