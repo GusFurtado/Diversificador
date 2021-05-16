@@ -1,5 +1,5 @@
 import dash
-from dash.dependencies import Output, Input, MATCH
+from dash.dependencies import Output, Input, State, MATCH
 import dash_bootstrap_components as dbc
 
 import layout
@@ -21,6 +21,7 @@ app = dash.Dash(
 
 app.title = 'Diversificador de Carteira'
 app.layout = layout.layout
+app.server.secret_key = 'TEMP_KEY'
 
 
 
@@ -30,6 +31,7 @@ app.layout = layout.layout
     Input({'type': 'checkbox', 'row': MATCH}, 'checked'),
     prevent_initial_call = True)
 def set_name(input, check):
+    print(dash.callback_context.triggered)
     try:
         t = utils.Ticker(input, check)
         return t.name
@@ -38,9 +40,20 @@ def set_name(input, check):
 
 
 
+@app.callback(
+    Output('table_body', 'children'),
+    Input('new_ticker_button', 'n_clicks'),
+    State('table_body', 'children'),
+    prevent_initial_call = True)
+def add_new_ticker(click, tbody):
+    tbody.append(layout.table_row(click))
+    return tbody
+    
+
+
 if __name__ == '__main__':
     app.run_server(
         host = '0.0.0.0',
         port = 1000,
-        debug = True
+        debug = False
     )

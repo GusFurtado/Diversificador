@@ -1,3 +1,4 @@
+import flask
 import pandas as pd
 import plotly.graph_objects as go
 import yfinance
@@ -38,14 +39,20 @@ class Ticker:
             ticker = f'{ticker}.SA'
             
         t = yfinance.Ticker(ticker)
-        df = t.history(
-            period = '5y',
-            interval = '1mo',
-            auto_adjust = True
-        )
-
-        self.history = df.loc[df.Volume > 0, 'Close']
+        self.ticker = ticker
+        self.ticker_class = t
         self.info = t.info
         self.name = t.info['longName']
         self.currency = t.info['currency']
         self.logo = t.info['logo_url']
+
+
+    def get_history(self):
+        df = self.ticker_class.history(
+            period = '5y',
+            interval = '1mo',
+            auto_adjust = True
+        )
+        df = df.loc[df.Volume > 0, 'Close']
+
+        flask.session[self.ticker] = df

@@ -26,15 +26,22 @@ def table_row(uid:int):
 
 
 main_content = [
-    html.H1('Escolha um ticker:'),
+    html.H1('Escolha os tickers:'),
     dbc.Table([
         html.Thead([
             html.Th(th) for th in ['🇧🇷', 'Ticker', 'Nome']
         ]),
-        html.Tbody([
-            table_row(i) for i in ['teste1', 'teste2', 'teste3']
-        ])
-    ])
+        html.Tbody(
+            [table_row(0)],
+            id = 'table_body'
+        )
+    ]),
+    dbc.Button(
+        '(+) Adicionar ticker',
+        color = 'primary',
+        size = 'sm',
+        id = 'new_ticker_button'
+    )
 ]
 
 
