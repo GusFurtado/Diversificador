@@ -1,4 +1,6 @@
 import yfinance
+import pandas as pd
+import dash_html_components as html
 
 
 
@@ -47,3 +49,29 @@ def get_data(ticker):
         auto_adjust = True
     )
     return df.loc[df.Volume > 0, 'Close']
+
+
+
+def get_url_hash(tickers, b3, names):
+    
+    df = pd.DataFrame({
+        'b3': b3,
+        'tickers': tickers,
+        'names': names
+    })
+    
+    df = df[~df.names.isin([None, 'Ticker não encontrado'])]
+    df.tickers = df.tickers.str.upper()
+    
+    tickers = df.apply(
+        lambda row: f'#{row.tickers}.SA' if row.b3 else f'#{row.tickers}',
+        axis = 1
+    )
+
+    return ''.join(tickers)
+
+
+
+def load_report(hashtags):
+    tickers = hashtags.split('#')
+    return [html.P(ticker) for ticker in tickers]

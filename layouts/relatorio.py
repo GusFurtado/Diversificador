@@ -22,14 +22,10 @@ jumbotron = dbc.Jumbotron(
 
 
 
-main_content = [
+layout = html.Div([
     dcc.Location(id='location'),
-    jumbotron
-]
-
-
-
-layout = dbc.Container(
-    children = jumbotron,
-    id = 'container'
-)
+    jumbotron,
+    dbc.Container(
+        id = 'container'
+    )
+])

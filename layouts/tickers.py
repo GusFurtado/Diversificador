@@ -58,8 +58,6 @@ def table_row(uid:int):
 
 
 main_content = [
-    dcc.Location(id='location'),
-    jumbotron,
     dbc.Table([
         html.Thead([
             html.Th(th) for th in ['🇧🇷', 'Ticker', 'Nome']
@@ -96,7 +94,11 @@ main_content = [
 
 
 
-layout = dbc.Container(
-    children = main_content,
-    id = 'container'
-)
+layout = html.Div([
+    dcc.Location(id='location'),
+    jumbotron,
+    dbc.Container(
+        main_content,
+        id = 'container'
+    )
+])
