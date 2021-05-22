@@ -19,8 +19,28 @@ jumbotron = dbc.Jumbotron(
 
 
 
+corr_timeline_modal = dbc.Modal([
+    dbc.ModalHeader(
+        id = 'corr_timeline_title'
+    ),
+    dbc.ModalBody(
+        dcc.Graph(
+            id = 'corr_timeline_chart'
+        )
+    ),
+    dbc.ModalFooter()
+],
+    id = 'corr_timeline_modal',
+    is_open = False,
+    size = 'lg'
+)
+
+
+
 layout = html.Div([
     dcc.Location(id='location'),
+    dcc.Store(id='dataframe'),
+    corr_timeline_modal,
     jumbotron,
     dbc.Container(
         id = 'container'

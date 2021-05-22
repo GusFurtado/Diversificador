@@ -22,3 +22,14 @@ body {
 .corr_table_head {
     text-align: center;
 }
+
+
+
+.corr_title {
+    font-weight: 800;
+}
+
+
+
+.blue {color: blue;}
+.red  {color: red;}

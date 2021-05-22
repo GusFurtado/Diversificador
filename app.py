@@ -2,6 +2,7 @@ from socket import gethostname
 
 import dash
 from dash.dependencies import Output, Input, State, ALL, MATCH
+from dash.exceptions import PreventUpdate
 import dash_bootstrap_components as dbc
 
 import flask
@@ -16,7 +17,7 @@ import utils
 
 
 MONTSERRAT = {
-    'href': 'https://fonts.googleapis.com/css?family=Montserrat',
+    'href': 'https://fonts.googleapis.com/css2?family=Montserrat:wght@300;800&display=swap',
     'rel': 'stylesheet'
 }
 
@@ -107,10 +108,32 @@ def go_to_report(_, names, tickers, b3):
 
 @relatorio_app.callback(
     Output('container', 'children'),
+    Output('dataframe', 'data'),
     Input('location', 'hash'))
 def load_relatorio(hashtags):
     report = utils.Markowitz(hashtags)
-    return report.corr_table()
+    return report.corr_table(), report.df.to_json()
+
+
+
+@relatorio_app.callback(
+    Output('corr_timeline_modal', 'is_open'),
+    Output('corr_timeline_title', 'children'),
+    Output('corr_timeline_chart', 'figure'),
+    Input({'ticker_a': ALL, 'ticker_b': ALL}, 'n_clicks'),
+    State('dataframe', 'data'),
+    prevent_initial_call = True)
+def load_corr_timeline(tickers, data):
+    if all(click is None for click in tickers):
+        raise PreventUpdate
+    cc = dash.callback_context.triggered[0]['prop_id'].split('"')
+    fig = utils.CorrelationTimeline(cc[3], cc[7])
+    
+    return (
+        True,               # is_open
+        fig.title(),        # title
+        fig.plot(data)      # chart
+    )
 
 
 

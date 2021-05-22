@@ -34,33 +34,6 @@ def get_name(ticker:str, b3:bool) -> str:
         return t.info['longName'] if 'longName' in t.info else t.info['shortName']
     except:
         return 'Ticker não encontrado'
-        
-
-
-def get_data(ticker:str) -> pd.DataFrame:
-    '''
-    Retorna o histórico de cotações do ticker desejado.
-
-    Parameters
-    ----------
-    ticker : str
-        Ticker desejado.
-
-    Returns
-    -------
-    pandas.core.frame.DataFrame
-        Histórico de fechamento do ticker desejado.
-
-    --------------------------------------------------------------------------
-    '''
-
-    t = yfinance.Ticker(ticker)
-    df = t.history(
-        period = '5y',
-        interval = '1mo',
-        auto_adjust = True
-    )
-    return df.loc[df.Volume > 0, 'Close']
 
 
 
@@ -114,7 +87,7 @@ class Markowitz:
     hashtags : str
         Hashtags capturadas da URL.
 
-    ------------------------------------------------------------------------
+    --------------------------------------------------------------------------
     '''
 
     def __init__(self, hashtags:list):
@@ -201,37 +174,56 @@ class Markowitz:
         )
 
 
-    def corr_timeline(self, ticker_a:str, ticker_b:str) -> go.Figure:
+
+class CorrelationTimeline:
+    '''
+    Carrega toda a estrutura do modal de comparação dos históricos de dois
+    tickers  diferentes.
+
+    Parameters
+    ----------
+    ticker_a : str
+        Primeiro ticker que será comparado.
+    ticker_b : str
+        Segundo ticker que será comparado.
+
+    --------------------------------------------------------------------------
+    '''
+
+    def __init__(self, ticker_a:str, ticker_b:str):
+        self.ticker_a = ticker_a
+        self.ticker_b = ticker_b
+
+
+    def plot(self, data):
         '''
-        Gera gráfico de linhas para comparação entre dois tickers.
+        Gera o gráfico com as timelines dos dois tickers.
 
         Parameters
         ----------
-        ticker_a : str
-            Primeiro ticker que será comparado.
-        ticker_b : str
-            Segundo ticker que será comparado.
+        data : dict
+            Histórico de cotações dos tickers.
 
         Returns
         -------
         plotly.graph_objects.Figure
-            Gráfico de linhas com histórico de cotações normalizado de dois tickers.
+            Gráfico de linhas com histórico de cotações normalizado de dois
+            tickers.
 
-        --------------------------------------------------------------------
+        ----------------------------------------------------------------------
         '''
-        df = self.df[[ticker_a, ticker_b]].dropna()
+
+        df = pd.read_json(data)[[self.ticker_a, self.ticker_b]]
+        df = df.dropna()
 
         fig = go.Figure(
             layout = {
-                'legend_orientation': 'h',
-                'title': {
-                    'text': f'<b style="color:blue">{ticker_a}</b> x <b style="color:red">{ticker_b}</b>'},
                 'yaxis': {'visible': False},
                 'showlegend': False
             }
         )
 
-        for ticker in [ticker_a, ticker_b]:
+        for ticker in [self.ticker_a, self.ticker_b]:
 
             # Normalizar histórico do ticker
             ds = (df[ticker] - df[ticker].min()) \
@@ -246,4 +238,29 @@ class Markowitz:
                 )
             )
 
-        fig.show()
+        return fig
+
+
+    def title(self) -> list:
+        '''
+        Título formatado do gráfico.
+
+        Returns
+        -------
+        list of Dash components
+            Título formatado para o ModalHeader do Dash Bootstrap Components.
+
+        ----------------------------------------------------------------------
+        '''
+
+        return [
+            html.Span(
+                self.ticker_a,
+                className = 'corr_title blue'
+            ),
+            html.Span('  x  '),
+            html.Span(
+                self.ticker_b,
+                className = 'corr_title red'
+            )
+        ]
