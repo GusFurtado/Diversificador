@@ -7,12 +7,9 @@ import dash_html_components as html
 jumbotron = dbc.Jumbotron(
     dbc.Container([
         html.H1(
-            'Relatório de Análise',
-            className = 'display-3'
-        ),
-        html.P(
-            'Esta página conterá as análises de diversificação de portfólio.',
-            className = 'lead',
+            'Diversificador de Portfólio',
+            className = 'display-3',
+            style = {'text-align': 'center'}
         )
     ],
         fluid = True,

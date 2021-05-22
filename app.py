@@ -72,12 +72,8 @@ def render_app2():
     Input({'type': 'input', 'row': MATCH}, 'value'),
     Input({'type': 'checkbox', 'row': MATCH}, 'checked'),
     prevent_initial_call = True)
-def set_name(input, check):
-    try:
-        t = utils.Ticker(input, check)
-        return t.name
-    except:
-        return 'Ticker não encontrado'
+def set_name(ticker, b3):
+    return utils.get_name(ticker, b3)
 
 
 
@@ -113,7 +109,8 @@ def go_to_report(_, names, tickers, b3):
     Output('container', 'children'),
     Input('location', 'hash'))
 def load_relatorio(hashtags):
-    return utils.load_report(hashtags)
+    report = utils.Markowitz(hashtags)
+    return report.corr_table()
 
 
 

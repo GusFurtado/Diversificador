@@ -9,3 +9,16 @@ body {
     align-items: center;
     height: 40px;
 }
+
+
+
+.corr_table_data {
+    text-align: center;
+    cursor: pointer;
+}
+
+
+
+.corr_table_head {
+    text-align: center;
+}

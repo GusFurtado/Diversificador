@@ -1,3 +1,6 @@
+import dash_bootstrap_components as dbc
+import dash_html_components as html
+
 import pandas as pd
 import plotly.graph_objects as go
 import yfinance
@@ -119,7 +122,8 @@ class Markowitz:
         t = yfinance.Tickers(' '.join(tickers))
         self.df = t.history(
             period = '5y',
-            auto_adjust = True
+            auto_adjust = True,
+            progress = False
         ).Close
 
 
@@ -134,7 +138,67 @@ class Markowitz:
 
         ----------------------------------------------------------------------
         '''
-        return self.df.corr()
+        return self.df.corr().reset_index()
+
+
+    def corr_table(self) -> dbc.Table:
+        
+        def _table_head(th):
+            if th == 'index':
+                th = ''
+            return html.Th(
+                th,
+                className = 'corr_table_head'    
+            )
+
+        def _table_data(td, i, j):
+            if isinstance(td, str):
+                return html.Td(
+                    html.B(td)
+                )
+            else:
+                if td == 1:
+                    style = {
+                        'background-color': 'black',
+                        'color': 'black'
+                    }
+                elif td > 0.7:
+                    style = {
+                        'background-color': 'crimson',
+                        'color': 'white'
+                    }
+                elif td < 0.1:
+                    style = {
+                        'background-color': 'aqua',
+                        'color': 'black'
+                    }
+                else:
+                    style = None
+                return html.Td(
+                    f'{td:.2f}',
+                    className = 'corr_table_data',
+                    style = style,
+                    id = {
+                        'ticker_a': df.iat[i,0],
+                        'ticker_b': df.columns[j]
+                    }
+                )
+
+        df = self.corr()
+        return dbc.Table([
+            html.Thead(
+                html.Tr([
+                    _table_head(th) for th in df.columns
+                ])
+            ),
+            html.Tbody([
+                html.Tr([
+                    _table_data(td, i, j) for j, td in enumerate(row)
+                ]) for i, row in df.iterrows()
+            ])
+        ],
+            bordered = True
+        )
 
 
     def corr_timeline(self, ticker_a:str, ticker_b:str) -> go.Figure:
