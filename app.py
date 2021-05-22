@@ -5,6 +5,7 @@ from dash.dependencies import Output, Input, State, ALL, MATCH
 import dash_bootstrap_components as dbc
 
 import flask
+import plotly.io as pio
 from werkzeug.middleware.dispatcher import DispatcherMiddleware
 from werkzeug import run_simple
 
@@ -21,8 +22,10 @@ MONTSERRAT = {
 
 
 
+# Configs
 PORT = 1000
 server = flask.Flask(__name__)
+pio.templates.default = 'plotly_white'
 
 
 

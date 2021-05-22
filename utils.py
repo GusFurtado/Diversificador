@@ -1,6 +1,6 @@
-import yfinance
 import pandas as pd
-import dash_html_components as html
+import plotly.graph_objects as go
+import yfinance
 
 
 
@@ -101,7 +101,7 @@ def get_url_hash(tickers:list, b3:list, names:list) -> str:
 
 
 
-def load_report(hashtags:str) -> list:
+class Markowitz:
     '''
     Captura as hashtags da URL e as utiliza como parâmetro para carregar o
     relatório de análise de diversificação.
@@ -111,13 +111,75 @@ def load_report(hashtags:str) -> list:
     hashtags : str
         Hashtags capturadas da URL.
 
-    Returns
-    -------
-    list of Dash Components
-        Relatório de diversificação em formato HTML.
-
-    --------------------------------------------------------------------------
+    ------------------------------------------------------------------------
     '''
 
-    tickers = hashtags.split('#')
-    return [html.P(ticker) for ticker in tickers]
+    def __init__(self, hashtags:list):
+        tickers = hashtags.split('#')
+        t = yfinance.Tickers(' '.join(tickers))
+        self.df = t.history(
+            period = '5y',
+            auto_adjust = True
+        ).Close
+
+
+    def corr(self) -> pd.DataFrame:
+        '''
+        Gera a matriz de correlação dos tickers.
+
+        Returns
+        -------
+        pandas.core.frame.DataFrame
+            Matriz de correlação (coeficiente de Pearson) entre os tickers.
+
+        ----------------------------------------------------------------------
+        '''
+        return self.df.corr()
+
+
+    def corr_timeline(self, ticker_a:str, ticker_b:str) -> go.Figure:
+        '''
+        Gera gráfico de linhas para comparação entre dois tickers.
+
+        Parameters
+        ----------
+        ticker_a : str
+            Primeiro ticker que será comparado.
+        ticker_b : str
+            Segundo ticker que será comparado.
+
+        Returns
+        -------
+        plotly.graph_objects.Figure
+            Gráfico de linhas com histórico de cotações normalizado de dois tickers.
+
+        --------------------------------------------------------------------
+        '''
+        df = self.df[[ticker_a, ticker_b]].dropna()
+
+        fig = go.Figure(
+            layout = {
+                'legend_orientation': 'h',
+                'title': {
+                    'text': f'<b style="color:blue">{ticker_a}</b> x <b style="color:red">{ticker_b}</b>'},
+                'yaxis': {'visible': False},
+                'showlegend': False
+            }
+        )
+
+        for ticker in [ticker_a, ticker_b]:
+
+            # Normalizar histórico do ticker
+            ds = (df[ticker] - df[ticker].min()) \
+                / (df[ticker].max() - df[ticker].min()) 
+
+            fig.add_trace(
+                go.Scatter(
+                    x = df.index,
+                    y = ds,
+                    name = ticker,
+                    hoverinfo = 'skip'
+                )
+            )
+
+        fig.show()
