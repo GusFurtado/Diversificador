@@ -1,9 +1,16 @@
 import dash_bootstrap_components as dbc
 import dash_html_components as html
 
+import cvxopt as opt
+from cvxopt import blas, solvers
+import numpy as np
 import pandas as pd
 import plotly.graph_objects as go
 import yfinance
+
+
+
+solvers.options['show_progress'] = False
 
 
 
@@ -93,11 +100,18 @@ class Markowitz:
     def __init__(self, hashtags:list):
         tickers = hashtags.split('#')
         t = yfinance.Tickers(' '.join(tickers))
+        
         self.df = t.history(
             period = '5y',
             auto_adjust = True,
             progress = False
         ).Close
+        
+        self.returns = self.df.groupby(
+            self.df.index.strftime('%Y-%m')
+        ).last().pct_change().dropna()
+        
+        self.tickers = self.df.columns
 
 
     def corr(self) -> pd.DataFrame:
@@ -115,6 +129,16 @@ class Markowitz:
 
 
     def corr_table(self) -> dbc.Table:
+        '''
+        Converte a tabela de correlação para o formato HTML.
+
+        Returns
+        -------
+        dash_bootstrap_components.Table
+            Tabela de correlação formatada.
+
+        ----------------------------------------------------------------------
+        '''
         
         def _table_head(th):
             if th == 'index':
@@ -172,6 +196,45 @@ class Markowitz:
         ],
             bordered = True
         )
+
+
+    def optimize(self) -> pd.DataFrame:
+        '''
+        Gera um DataFrame de portfólios otimizados.
+
+        Returns
+        -------
+        pandas.core.frame.DataFrame
+            DataFrame de portfólios.
+
+        ----------------------------------------------------------------------
+        '''
+        
+        # Returns setup
+        returns = np.asmatrix(self.returns.T)
+        n = len(returns)
+
+        # Optimizer setup
+        S = opt.matrix(np.cov(returns))
+        pbar = opt.matrix(np.mean(returns, axis=1))
+        G = -opt.matrix(np.eye(n))
+        h = opt.matrix(0.0, (n ,1))
+        A = opt.matrix(1.0, (1, n))
+        b = opt.matrix(1.0)
+
+        # Solve
+        mus = [10**(t/20-1) for t in range(100)]
+        portfolios = [solvers.qp(mu*S, -pbar, G, h, A, b)['x'] for mu in mus]
+
+        # Format
+        concat = np.concatenate([np.asarray(portfolio) for portfolio in portfolios])
+        df = pd.DataFrame(concat.reshape(-1,n))
+        df.columns = self.tickers
+
+        # Expand
+        df['expected_returns'] = [blas.dot(pbar, x) for x in portfolios]
+        df['standard_deviation'] = [np.sqrt(blas.dot(x, S*x)) for x in portfolios]
+        return df.round(3)
 
 
 
