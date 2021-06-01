@@ -226,15 +226,17 @@ class Markowitz:
         mus = [10**(t/20-1) for t in range(100)]
         portfolios = [solvers.qp(mu*S, -pbar, G, h, A, b)['x'] for mu in mus]
 
-        # Format
+        # Concatenate porfolios
         concat = np.concatenate([np.asarray(portfolio) for portfolio in portfolios])
         df = pd.DataFrame(concat.reshape(-1,n))
         df.columns = self.tickers
 
-        # Expand
-        df['expected_returns'] = [blas.dot(pbar, x) for x in portfolios]
-        df['standard_deviation'] = [np.sqrt(blas.dot(x, S*x)) for x in portfolios]
-        return df.round(3)
+        # Results
+        df['Retorno Esperado'] = [blas.dot(pbar, x) for x in portfolios]
+        df['Risco'] = [np.sqrt(blas.dot(x, S*x)) for x in portfolios]
+
+        df.index = df.index[::-1]
+        return df.sort_index()
 
 
 
@@ -327,3 +329,75 @@ class CorrelationTimeline:
                 className = 'corr_title red'
             )
         ]
+
+
+
+class MarkowitzAllocation:
+    '''
+    Gera o relatório de alocação de recursos.
+
+    Parameters
+    ----------
+    data : dict
+        Tabela de alocação de todos os portfólios.
+    portfolio : int
+        ID do portfólio deste relatório.
+
+    --------------------------------------------------------------------------
+    '''
+
+    def __init__(self, data:dict, portfolio:int):
+        self.df = pd.read_json(data)
+        self.portfolio = portfolio
+
+
+    def table(self) -> dbc.Table:
+        '''
+        Gera uma tabela HTML de alocação de recursos.
+
+        Returns
+        -------
+        dash_bootstrap_components.Table
+            Tabela de alocação de recursos formatada.
+
+        ----------------------------------------------------------------------
+        '''
+
+        return dbc.Table([
+            html.Thead(
+                html.Tr([
+                    html.Th(th) for th in self.df.columns
+                ])
+            ),
+            html.Tbody(
+                html.Tr([
+                    html.Td(f'{100*td:.1f}%') for td in self.df.iloc[self.portfolio,:-2]
+                ] + [
+                    html.Td(f'{100*self.df.iloc[self.portfolio,-2]:.1f}% a.m.'),
+                    html.Td(f'±{100*self.df.iloc[self.portfolio,-1]:.1f}%')
+                ])
+            )
+        ],
+            bordered = True
+        )
+
+    
+    def pie(self) -> go.Pie:
+        '''
+        Gráfico de alocação de recursos.
+
+        Returns
+        -------
+        plotly.graph_objects.Pie
+            Pie chart de alocação de recursos.
+        
+        ----------------------------------------------------------------------
+        '''
+
+        return go.Figure(
+            go.Pie(
+                labels = self.df.columns[:-2],
+                values = self.df.iloc[self.portfolio,:-2],
+                hole = 0.5
+            )
+        )

@@ -107,12 +107,31 @@ def go_to_report(_, names, tickers, b3):
 
 
 @relatorio_app.callback(
-    Output('container', 'children'),
+    Output('corr_table', 'children'),
     Output('dataframe', 'data'),
+    Output('portfolios_data', 'data'),
     Input('location', 'hash'))
 def load_relatorio(hashtags):
     report = utils.Markowitz(hashtags)
-    return report.corr_table(), report.df.to_json()
+    return (
+        report.corr_table(),
+        report.df.to_json(),
+        report.optimize().to_json()
+    )
+
+
+
+@relatorio_app.callback(
+    Output('portfolios_output', 'children'),
+    Output('portfolios_chart', 'figure'),
+    Input('portfolios_slider', 'value'),
+    Input('portfolios_data', 'data'))
+def select_portfolio_risk(value, data):
+    report = utils.MarkowitzAllocation(data, value)
+    return (
+        report.table(),
+        report.pie()
+    )
 
 
 

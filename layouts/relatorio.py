@@ -37,12 +37,41 @@ corr_timeline_modal = dbc.Modal([
 
 
 
+portfolios = html.Div([
+    dcc.Slider(
+        min = 0,
+        max = 99,
+        step = 1,
+        marks = {
+            0: 'Seguro',
+            99: 'Arriscado'
+        },
+        value = 0,
+        id = 'portfolios_slider'
+    ),
+    html.Div(
+        id = 'portfolios_output'
+    ),
+    html.Div(
+        dcc.Graph(
+            id = 'portfolios_chart'
+        )
+    )
+])
+
+
+
 layout = html.Div([
     dcc.Location(id='location'),
     dcc.Store(id='dataframe'),
+    dcc.Store(id='portfolios_data'),
     corr_timeline_modal,
     jumbotron,
-    dbc.Container(
-        id = 'container'
+    dbc.Container([
+        html.Div(id='corr_table'),
+        html.Hr(),
+        portfolios
+    ],
+        style = {'padding-bottom': 20}
     )
 ])
