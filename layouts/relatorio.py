@@ -1,13 +1,16 @@
 import dash_bootstrap_components as dbc
+from dash_bootstrap_components._components.Label import Label
 import dash_core_components as dcc
 import dash_html_components as html
+
+import app_config as cfg
 
 
 
 jumbotron = dbc.Jumbotron(
     dbc.Container([
         html.H1(
-            'Diversificador de Portfólio',
+            cfg.NAME,
             className = 'display-3',
             style = {'text-align': 'center'}
         )
@@ -38,26 +41,63 @@ corr_timeline_modal = dbc.Modal([
 
 
 portfolios = html.Div([
-    dcc.Slider(
-        min = 0,
-        max = 99,
-        step = 1,
-        marks = {
-            0: 'Seguro',
-            99: 'Arriscado'
-        },
-        value = 0,
-        id = 'portfolios_slider'
-    ),
-    html.Div(
-        id = 'portfolios_output'
-    ),
-    html.Div(
-        dcc.Graph(
-            id = 'portfolios_chart'
+
+    dbc.Row([
+
+        # Coluna 1
+        dbc.Col([
+            dbc.Label(
+                html.B('Risco do Portfolio')
+            ),
+            dcc.Slider(
+                min = 0,
+                max = 99,
+                step = 1,
+                marks = {
+                    0: 'Seguro',
+                    99: 'Arriscado'
+                },
+                value = 0,
+                id = 'portfolios_slider'
+            ),
+
+            html.Hr(),
+
+            # Expected Returns
+            dbc.Label(
+                html.B('Retorno Esperado')
+            ),
+            html.Div(
+                id = 'portfolios_returns'
+            ),
+
+            html.Hr(),
+
+            dcc.Graph(
+                id = 'portfolios_table'
+            )
+        ],
+            style = {'padding': 20},
+            width = 12,
+            lg = 6
+        ),
+
+        # Coluna 2
+        dbc.Col(
+            dcc.Graph(
+                id = 'portfolios_chart'
+            ),
+            style = {'padding': 20},
+            width = 12,
+            lg = 6
         )
+
+    ],
+        no_gutters = True
     )
-])
+],
+    className = 'shadow'
+)
 
 
 

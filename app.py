@@ -12,21 +12,13 @@ from werkzeug import run_simple
 
 from layouts import tickers
 from layouts import relatorio
+import app_config as cfg
 import utils
 
 
 
-MONTSERRAT = {
-    'href': 'https://fonts.googleapis.com/css2?family=Montserrat:wght@300;800&display=swap',
-    'rel': 'stylesheet'
-}
-
-
-
-# Configs
-PORT = 1000
 server = flask.Flask(__name__)
-pio.templates.default = 'plotly_white'
+pio.templates.default = cfg.PLOTLY_TEMPLATE
 
 
 
@@ -34,10 +26,10 @@ tickers_app = dash.Dash(
     __name__,
     server = server,
     url_base_pathname = '/tickers/',
-    external_stylesheets = [dbc.themes.BOOTSTRAP, MONTSERRAT]
+    external_stylesheets = [dbc.themes.BOOTSTRAP, cfg.MONTSERRAT]
 )
 
-tickers_app.title = 'Diversificador de Carteira'
+tickers_app.title = cfg.NAME
 tickers_app.layout = tickers.layout
 
 
@@ -46,10 +38,10 @@ relatorio_app = dash.Dash(
     __name__,
     server = server,
     url_base_pathname = '/relatorio/',
-    external_stylesheets=[dbc.themes.BOOTSTRAP, MONTSERRAT]
+    external_stylesheets=[dbc.themes.BOOTSTRAP, cfg.MONTSERRAT]
 )
 
-relatorio_app.title = 'Diversificador de Carteira'
+relatorio_app.title = cfg.NAME
 relatorio_app.layout = relatorio.layout
 
 
@@ -102,7 +94,7 @@ def go_to_report(_, names, tickers, b3):
         b3 = b3,
         names = names
     )
-    return f'http://{gethostname()}:{PORT}/relatorio/{hashs}'
+    return f'http://{gethostname()}:{cfg.PORT}/relatorio/{hashs}'
 
 
 
@@ -122,7 +114,8 @@ def load_relatorio(hashtags):
 
 
 @relatorio_app.callback(
-    Output('portfolios_output', 'children'),
+    Output('portfolios_table', 'figure'),
+    Output('portfolios_returns', 'children'),
     Output('portfolios_chart', 'figure'),
     Input('portfolios_slider', 'value'),
     Input('portfolios_data', 'data'))
@@ -130,6 +123,7 @@ def select_portfolio_risk(value, data):
     report = utils.MarkowitzAllocation(data, value)
     return (
         report.table(),
+        report.expected_returns(),
         report.pie()
     )
 
@@ -166,6 +160,6 @@ app = DispatcherMiddleware(server, {
 if __name__ == '__main__':
     run_simple(
         hostname = '0.0.0.0',
-        port = PORT,
+        port = cfg.PORT,
         application = app
     )

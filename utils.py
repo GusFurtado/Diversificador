@@ -194,7 +194,8 @@ class Markowitz:
                 ]) for i, row in df.iterrows()
             ])
         ],
-            bordered = True
+            bordered = True,
+            className = 'shadow'
         )
 
 
@@ -349,6 +350,7 @@ class MarkowitzAllocation:
     def __init__(self, data:dict, portfolio:int):
         self.df = pd.read_json(data)
         self.portfolio = portfolio
+        print(self.portfolio)
 
 
     def table(self) -> dbc.Table:
@@ -363,22 +365,16 @@ class MarkowitzAllocation:
         ----------------------------------------------------------------------
         '''
 
-        return dbc.Table([
-            html.Thead(
-                html.Tr([
-                    html.Th(th) for th in self.df.columns
-                ])
-            ),
-            html.Tbody(
-                html.Tr([
-                    html.Td(f'{100*td:.1f}%') for td in self.df.iloc[self.portfolio,:-2]
-                ] + [
-                    html.Td(f'{100*self.df.iloc[self.portfolio,-2]:.1f}% a.m.'),
-                    html.Td(f'±{100*self.df.iloc[self.portfolio,-1]:.1f}%')
-                ])
+        return go.Figure(
+            go.Table(
+                header = {'values': ['Recurso', 'Alocação']},
+                cells = {'values': [
+                    self.df.columns[:-2],
+                    self.df.iloc[self.portfolio,:-2].apply(
+                        lambda x: f'{100*x:.1f}%'
+                    )
+                ]}
             )
-        ],
-            bordered = True
         )
 
     
@@ -395,9 +391,26 @@ class MarkowitzAllocation:
         '''
 
         return go.Figure(
-            go.Pie(
+            data = go.Pie(
                 labels = self.df.columns[:-2],
                 values = self.df.iloc[self.portfolio,:-2],
                 hole = 0.5
+            ),
+            layout = go.Layout(
+                margin = {'b': 20, 't': 20}
             )
         )
+
+
+    def expected_returns(self):
+        return [
+            html.B(
+                f'{100*self.df.iloc[self.portfolio,-2]:.1f}% a.m.',
+                style = {'font-size': 24}    
+            ),
+            html.Span(
+                f'(±{100*self.df.iloc[self.portfolio,-1]:.1f}%)',
+                style = {'font-size': 16},
+                className = 'ml-2'
+            )
+        ]
