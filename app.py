@@ -26,7 +26,11 @@ tickers_app = dash.Dash(
     __name__,
     server = server,
     url_base_pathname = '/tickers/',
-    external_stylesheets = [dbc.themes.BOOTSTRAP, cfg.MONTSERRAT]
+    external_stylesheets = [
+        dbc.themes.BOOTSTRAP,
+        cfg.MONTSERRAT,
+        cfg.FONTAWESOME
+    ]
 )
 
 tickers_app.title = cfg.NAME
@@ -61,12 +65,15 @@ def render_app2():
 
 
 @tickers_app.callback(
-    Output({'type': 'name', 'row': MATCH}, 'children'),
-    Input({'type': 'input', 'row': MATCH}, 'value'),
-    Input({'type': 'checkbox', 'row': MATCH}, 'checked'),
+    Output({'type': 'name', 'uid': MATCH}, 'children'),
+    Output({'type': 'button', 'uid': MATCH}, 'color'),
+    Output({'type': 'button', 'uid': MATCH}, 'children'),
+    Input({'type': 'button', 'uid': MATCH}, 'n_clicks'),
+    State({'type': 'input', 'uid': MATCH}, 'value'),
+    State({'type': 'checkbox', 'uid': MATCH}, 'checked'),
     prevent_initial_call = True)
-def set_name(ticker, b3):
-    return utils.get_name(ticker, b3)
+def set_name(_, ticker, b3):
+    return utils.check_ticker(ticker, b3)
 
 
 

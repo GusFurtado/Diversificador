@@ -14,7 +14,7 @@ solvers.options['show_progress'] = False
 
 
 
-def get_name(ticker:str, b3:bool) -> str:
+def check_ticker(ticker:str, b3:bool) -> str:
     '''
     Valida o ticker desejado e retorna seu nome.
 
@@ -38,9 +38,22 @@ def get_name(ticker:str, b3:bool) -> str:
         ticker = f'{ticker}.SA'
     try:
         t = yfinance.Ticker(ticker)
-        return t.info['longName'] if 'longName' in t.info else t.info['shortName']
+        name = t.info['longName'] if 'longName' in t.info else t.info['shortName']
+        color = 'success'
+        status = [
+            html.I(className='fas fa-check-circle mr-2'),
+            html.Span('Ticker validado')
+        ]
+
     except:
-        return 'Ticker não encontrado'
+        name = 'Ticker não encontrado'
+        color = 'danger'
+        status = [
+            html.I(className='fas fa-times-circle mr-2'),
+            html.Span('Tente novamente')
+        ]
+
+    return name, color, status
 
 
 
@@ -56,7 +69,7 @@ def get_url_hash(tickers:list, b3:list, names:list) -> str:
     b3 : list of bool
         Lista dos checkboxes.
     names : list of str
-        Lista dos nomes validados pela função `get_names`.
+        Lista dos nomes validados pela função `check_ticker`.
 
     Returns
     -------
@@ -350,7 +363,6 @@ class MarkowitzAllocation:
     def __init__(self, data:dict, portfolio:int):
         self.df = pd.read_json(data)
         self.portfolio = portfolio
-        print(self.portfolio)
 
 
     def table(self) -> dbc.Table:
