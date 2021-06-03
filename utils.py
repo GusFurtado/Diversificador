@@ -14,28 +14,30 @@ solvers.options['show_progress'] = False
 
 
 
-def check_ticker(ticker:str, b3:bool) -> str:
+def check_ticker(ticker:str) -> str:
     '''
     Valida o ticker desejado e retorna seu nome.
 
     Parameters
     ----------
     ticker : str
-        Ticker desejado.
-    b3 : bool
-        True, se o ticker é negociado na B3;
-        False, caso contrário.
+        Ticker desejado, adicionado o prefixo ".SA" caso seja uma ação
+        negociada na Bolsa de Valores de São Paulo.
 
     Returns
     -------
     str
         Nome do ticker desejado.
+    str
+        Nova cor do botão de verificação:
+        - 'success' (verde), se validado;
+        - 'danger' (vermelho), em caso de falha.
+    list of dash_html_components
+        Novo ícone e texto do botão de verificação.
 
     -------------------------------------------------------------------------- 
     '''
 
-    if b3:
-        ticker = f'{ticker}.SA'
     try:
         t = yfinance.Ticker(ticker)
         name = t.info['longName'] if 'longName' in t.info else t.info['shortName']
@@ -54,46 +56,6 @@ def check_ticker(ticker:str, b3:bool) -> str:
         ]
 
     return name, color, status
-
-
-
-def get_url_hash(tickers:list, b3:list, names:list) -> str:
-    '''
-    Converte os valores da tabela de inserção em uma lista de hashtags que
-    será enviada para a página de análises.
-
-    Parameters
-    ----------
-    tickers : list of str
-        Lista dos tickers nos campos de input de texto.
-    b3 : list of bool
-        Lista dos checkboxes.
-    names : list of str
-        Lista dos nomes validados pela função `check_ticker`.
-
-    Returns
-    -------
-    str
-        Lista de tickers formatada como argumentos de URL.
-
-    --------------------------------------------------------------------------
-    '''
-    
-    df = pd.DataFrame({
-        'b3': b3,
-        'tickers': tickers,
-        'names': names
-    })
-    
-    df = df[~df.names.isin([None, 'Ticker não encontrado'])]
-    df.tickers = df.tickers.str.upper()
-    
-    tickers = df.apply(
-        lambda row: f'#{row.tickers}.SA' if row.b3 else f'#{row.tickers}',
-        axis = 1
-    )
-
-    return ''.join(tickers)
 
 
 

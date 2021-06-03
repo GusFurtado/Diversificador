@@ -18,6 +18,7 @@ import utils
 
 
 server = flask.Flask(__name__)
+server.secret_key = cfg.SECRET_KEY
 pio.templates.default = cfg.PLOTLY_TEMPLATE
 
 
@@ -55,12 +56,23 @@ def redirect_menu():
     return flask.redirect('/tickers/')
 
 @server.route('/tickers/')
-def render_app1():
+def render_tickers():
     return flask.redirect('/PyTickers')
 
 @server.route('/relatorio/')
-def render_app2():
+def render_relatorio():
     return flask.redirect('/PyRelatorio')
+
+
+
+@tickers_app.callback(
+    Output('container', 'n_clicks'),
+    Input('container', 'style'))
+def clear_flask_session_on_init(_):
+    print(flask.session)
+    flask.session.clear()
+    print(flask.session)
+    raise PreventUpdate
 
 
 
@@ -73,34 +85,27 @@ def render_app2():
     State({'type': 'checkbox', 'uid': MATCH}, 'checked'),
     prevent_initial_call = True)
 def set_name(_, ticker, b3):
-    return utils.check_ticker(ticker, b3)
-
-
-
-@tickers_app.callback(
-    Output('table_body', 'children'),
-    Input('new_ticker_button', 'n_clicks'),
-    State('table_body', 'children'),
-    prevent_initial_call = True)
-def add_new_ticker(click, tbody):
-    tbody.append(tickers.table_row(click))
-    return tbody
+    ticker = ticker.upper()
+    if b3:
+        ticker = f'{ticker}.SA'
+    name, color, status = utils.check_ticker(ticker)
+    cc = dash.callback_context.triggered[0]['prop_id'].split('"')[7]
+    if color == 'success':
+        flask.session[cc] = f'#{ticker}'
+    else:
+        flask.session.pop(cc, None)
+    return name, color, status
 
 
 
 @tickers_app.callback(
     Output('location', 'href'),
     Input('analyse_portfolio_button', 'n_clicks'),
-    State({'type': 'name', 'row': ALL}, 'children'),
-    State({'type': 'input', 'row': ALL}, 'value'),
-    State({'type': 'checkbox', 'row': ALL}, 'checked'),
+    State({'type': 'input', 'uid': ALL}, 'value'),
+    State({'type': 'checkbox', 'uid': ALL}, 'checked'),
     prevent_initial_call = True)
-def go_to_report(_, names, tickers, b3):
-    hashs = utils.get_url_hash(
-        tickers = tickers,
-        b3 = b3,
-        names = names
-    )
+def go_to_report(_, tickers, b3):
+    hashs = ''.join(flask.session.values())
     return f'http://{gethostname()}:{cfg.PORT}/relatorio/{hashs}'
 
 

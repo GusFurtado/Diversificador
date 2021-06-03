@@ -1,6 +1,7 @@
 NAME = 'Diversificador de Portfólio'
 PORT = 1000
 PLOTLY_TEMPLATE = 'plotly_white'
+SECRET_KEY = 'DEV'
 
 
 
