@@ -130,10 +130,7 @@ def load_relatorio(hashtags):
     Input('efficiency_frontier', 'clickData'),
     Input('portfolios_data', 'data'))
 def select_portfolio_risk(click, data):
-    if click is None:
-        portfolio = 0
-    else:
-        portfolio = click['points'][0]['pointNumber']
+    portfolio = 0 if click is None else click['points'][0]['pointNumber']
     report = utils.MarkowitzAllocation(data, portfolio)
     return (
         report.expected_returns(),
@@ -145,11 +142,17 @@ def select_portfolio_risk(click, data):
 
 @relatorio_app.callback(
     Output('capital_allocation_line', 'figure'),
+    Output('risk_free_table', 'children'),
     Input('selected_portfolio', 'data'),
+    Input('capital_allocation_line', 'clickData'),
     prevent_inital_call = True)
-def update_capital_allocation_line(data):
+def update_capital_allocation_line(data, click):
+    p = 0 if click is None else click['points'][0]['pointNumber']
     report = utils.CapitalAllocation(data)
-    return report.capital_allocation_line()
+    return (
+        report.capital_allocation_line(),
+        report.final_table(p/20)
+    )
 
 
 

@@ -582,6 +582,30 @@ class CapitalAllocation:
         )
 
 
+    def final_table(self, p:float) -> list:
+
+        def tr(ticker):
+            value = self.weigh_risk_free(
+                value = self.data[ticker],
+                risk_free_rate = 0,
+                p = p
+            )
+            return html.Tr([
+                html.Td(ticker),
+                html.Td(f'{100*value:.1f}%')
+            ])
+
+        renda_fixa = [
+            html.Td('Renda Fixa'),
+            html.Td(f'{100*p:.1f}%')    
+        ]
+
+        renda_variavel = [tr(ticker) for ticker in self.data \
+            if ticker not in ['Retorno Esperado', 'Risco']]
+
+        return renda_fixa + renda_variavel
+
+
     def weigh_risk_free(
             self,
             value: float,

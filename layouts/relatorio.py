@@ -45,10 +45,8 @@ portfolios = html.Div([
 
     dbc.Row([
 
-        # Coluna 1
+        # Coluna 1: Efficiency Frontier
         dbc.Col([
-
-            # Efficiency Frontier
             dbc.Label(
                 html.B('Escolha um portfólio')
             ),
@@ -56,30 +54,24 @@ portfolios = html.Div([
                 id = 'efficiency_frontier',
                 config = utils.GRAPH_CONFIG
             )
-
         ],
             style = {'padding': 20},
             width = 12,
             lg = 6
         ),
 
-        # Coluna 2
+        # Coluna 2: Donut
         dbc.Col([
-
-            # Expected Returns
             dbc.Label(
                 html.B('Retorno Esperado')
             ),
             html.Div(
                 id = 'portfolios_returns'
             ),
-
-            # Donut
             dcc.Graph(
                 id = 'portfolios_chart',
                 config = utils.GRAPH_CONFIG
             )
-
         ],
             style = {'padding': 20},
             width = 12,
@@ -99,10 +91,8 @@ risk_free = html.Div([
 
     dbc.Row([
 
-        # Coluna 1
+        # Coluna 1: Capital Allocation Line
         dbc.Col([
-
-            # Risk-Free Capital Allocation Line
             dbc.Label(
                 html.B('Escolha um portfólio')
             ),
@@ -110,30 +100,31 @@ risk_free = html.Div([
                 id = 'capital_allocation_line',
                 config = utils.GRAPH_CONFIG
             )
-
         ],
             style = {'padding': 20},
             width = 12,
             lg = 6
         ),
 
-        # Coluna 2
+        # Coluna 2: Final Table
         dbc.Col([
-
-            # Expected Returns
             dbc.Label(
                 html.B('Retorno Esperado')
             ),
             html.Div(
                 id = 'risk_free_returns'
             ),
-
-            # Table
-            dcc.Graph(
-                id = 'risk_free_table',
-                config = utils.GRAPH_CONFIG
+            dbc.Table([
+                html.Thead(
+                    html.Tr([
+                        html.Th('Ticker'),
+                        html.Th('Proporção')
+                    ])
+                ),
+                html.Tbody(id='risk_free_table')
+            ],
+                bordered = True
             )
-
         ],
             style = {'padding': 20},
             width = 12,
