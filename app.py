@@ -129,9 +129,13 @@ def load_relatorio(hashtags):
     Output('portfolios_table', 'figure'),
     Output('portfolios_returns', 'children'),
     Output('portfolios_chart', 'figure'),
-    Input('portfolios_slider', 'value'),
+    Input('efficiency_frontier', 'clickData'),
     Input('portfolios_data', 'data'))
-def select_portfolio_risk(value, data):
+def select_portfolio_risk(click, data):
+    if click is None:
+        value = 0
+    else:
+        value = click['points'][0]['pointNumber']
     report = utils.MarkowitzAllocation(data, value)
     return (
         report.table(),

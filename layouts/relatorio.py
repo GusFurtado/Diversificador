@@ -48,24 +48,12 @@ portfolios = html.Div([
         dbc.Col([
 
             # Efficiency Frontier
-            dcc.Graph(id='efficiency_frontier'),
-
             dbc.Label(
-                html.B('Risco do Portfolio')
+                html.B('Escolha um portfólio')
             ),
-            dcc.Slider(
-                min = 0,
-                max = 99,
-                step = 1,
-                marks = {
-                    0: 'Seguro',
-                    99: 'Arriscado'
-                },
-                value = 0,
-                id = 'portfolios_slider'
+            dcc.Graph(
+                id = 'efficiency_frontier'
             ),
-
-            html.Hr(),
 
             dcc.Graph(
                 id = 'portfolios_table'
@@ -93,7 +81,7 @@ portfolios = html.Div([
             dcc.Graph(
                 id = 'portfolios_chart'
             )
-            
+
         ],
             style = {'padding': 20},
             width = 12,
