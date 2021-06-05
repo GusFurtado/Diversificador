@@ -148,8 +148,8 @@ def select_portfolio_risk(click, data):
     Input('selected_portfolio', 'data'),
     prevent_inital_call = True)
 def update_capital_allocation_line(data):
-    print(data)
-    raise PreventUpdate
+    report = utils.CapitalAllocation(data)
+    return report.capital_allocation_line()
 
 
 

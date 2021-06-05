@@ -1,3 +1,7 @@
+from DadosAbertosBrasil import selic 
+
+import json
+
 import dash_bootstrap_components as dbc
 import dash_html_components as html
 
@@ -232,8 +236,14 @@ class Markowitz:
             ),
             layout = {
                 'margin': {'b': 10, 't': 10},
-                'xaxis': {'tickformat': ',.1%'},
-                'yaxis': {'tickformat': ',.1%'},
+                'xaxis': {
+                    'tickformat': ',.1%',
+                    'title': {'text': 'Risco'}
+                },
+                'yaxis': {
+                    'tickformat': ',.1%',
+                    'title': {'text': r'Retorno Esperado (% a.m.)'}
+                },
             }
         )
 
@@ -471,24 +481,37 @@ class MarkowitzAllocation:
 
 
 class CapitalAllocation:
+    '''
+    Gera o relatório de alocação de renda risk-free.
 
-    def __init__(self):
-        return
+    Parameters
+    ----------
+    data : dict
+        Dados do portfólio selecionado.
+
+    Attributes
+    ----------
+    selic : float
+        Taxa SELIC mensal.
+
+    --------------------------------------------------------------------------
+    '''
+
+
+    def __init__(self, data:dict):
+        self.data = json.loads(data)
+        self.get_selic()
 
     
-    def selic(self):
+    def get_selic(self):
         '''
-        Captura a atual taxa SELIC.
-
-        Returns
-        -------
-        int
-            Taxa SELIC.
+        Captura a atual taxa SELIC mensal para usá-la como taxa risk-free.
 
         ----------------------------------------------------------------------
         '''
 
-        return
+        ao_ano = selic(ultimos=1).loc[0,'valor']
+        self.selic = (float(ao_ano)/100 + 1)**(1/12) - 1
 
 
     def capital_allocation_line(self):
@@ -503,6 +526,86 @@ class CapitalAllocation:
         ----------------------------------------------------------------------
         '''
 
+        razao = [i/20 for i in range(0,21)]
+        retorno = [
+            self.weigh_risk_free(
+                value = self.data['Retorno Esperado'],
+                risk_free_rate = self.selic,
+                p = p
+            ) for p in razao
+        ]
+        risco = [
+            self.weigh_risk_free(
+                value = self.data['Risco'],
+                risk_free_rate = 0,
+                p = p
+            ) for p in razao
+        ]
+        text = [
+            f'<b>Proporção de Renda Fixa:</b> {100*ra:.1f}%<br>' \
+            + f'<b>Retorno Esperado:</b> {100*re:.1f} ± {100*ri:.1f}% a.m.' \
+            for ra, re, ri in zip(razao, retorno, risco)
+        ]
+
         return go.Figure(
-            go.Scatter()
+            data = go.Scatter(
+                x = razao,
+                y = retorno,
+                mode = 'lines+markers',
+                hovertext = text,
+                hoverinfo = 'text',
+                marker = {
+                    'size': 10,
+                    'color': 'cyan',
+                    'line': {
+                        'color': 'blue',
+                        'width': 2
+                    }
+                },
+                line = {
+                    'color': 'blue',
+                    'width': 3
+                }
+            ),
+            layout = {
+                'margin': {'b': 10, 't': 10},
+                'xaxis': {
+                    'tickformat': ',.1%',
+                    'autorange': 'reversed',
+                    'title': {'text': 'Proporção de Renda Fixa'}
+                },
+                'yaxis': {
+                    'tickformat': ',.1%',
+                    'title': {'text': r'Retorno Esperado (% a.m.)'}
+                },
+            }
         )
+
+
+    def weigh_risk_free(
+            self,
+            value: float,
+            risk_free_rate: float,
+            p: float
+        ) -> float:
+        '''
+        Adiciona o peso da taxa risk-free a uma variável.
+
+        Parameters
+        ----------
+        value : float
+            Valor da variável que será ponderada.
+        risk_free_rate : float
+            Valor da taxa risk-free.
+        p : float
+            Proporção da taxa risk-free que será adicionada à variável.
+
+        Returns
+        -------
+        float
+            Valor ponderada para a variável.
+
+        ----------------------------------------------------------------------
+        '''
+
+        return p*risk_free_rate + (1-p)*value
