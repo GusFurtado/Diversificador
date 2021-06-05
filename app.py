@@ -69,9 +69,7 @@ def render_relatorio():
     Output('container', 'n_clicks'),
     Input('container', 'style'))
 def clear_flask_session_on_init(_):
-    print(flask.session)
     flask.session.clear()
-    print(flask.session)
     raise PreventUpdate
 
 
@@ -112,6 +110,7 @@ def go_to_report(_, tickers, b3):
 
 @relatorio_app.callback(
     Output('corr_table', 'children'),
+    Output('efficiency_frontier', 'figure'),
     Output('dataframe', 'data'),
     Output('portfolios_data', 'data'),
     Input('location', 'hash'))
@@ -119,8 +118,9 @@ def load_relatorio(hashtags):
     report = utils.Markowitz(hashtags)
     return (
         report.corr_table(),
+        report.efficiency_frontier(),
         report.df.to_json(),
-        report.optimize().to_json()
+        report.portfolios.to_json()
     )
 
 

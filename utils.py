@@ -87,25 +87,12 @@ class Markowitz:
         ).last().pct_change().dropna()
         
         self.tickers = self.df.columns
-
-
-    def corr(self) -> pd.DataFrame:
-        '''
-        Gera a matriz de correlação dos tickers.
-
-        Returns
-        -------
-        pandas.core.frame.DataFrame
-            Matriz de correlação (coeficiente de Pearson) entre os tickers.
-
-        ----------------------------------------------------------------------
-        '''
-        return self.df.corr().reset_index()
+        self.optimize()
 
 
     def corr_table(self) -> dbc.Table:
         '''
-        Converte a tabela de correlação para o formato HTML.
+        Gera uma matriz de correlação em formato HTML.
 
         Returns
         -------
@@ -156,7 +143,7 @@ class Markowitz:
                     }
                 )
 
-        df = self.corr()
+        df = self.df.corr().reset_index()
         return dbc.Table([
             html.Thead(
                 html.Tr([
@@ -212,7 +199,21 @@ class Markowitz:
         df['Risco'] = [np.sqrt(blas.dot(x, S*x)) for x in portfolios]
 
         df.index = df.index[::-1]
-        return df.sort_index()
+        self.portfolios = df.sort_index()
+
+
+    def efficiency_frontier(self):
+        return go.Figure(
+            go.Scatter(
+                x = self.portfolios['Risco'],
+                y = self.portfolios['Retorno Esperado'],
+                name = 'Fronteira da Eficiência',
+                mode = 'markers',
+                marker = {
+                    'size': 10
+                }
+            )
+        )
 
 
 

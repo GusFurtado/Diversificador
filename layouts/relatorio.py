@@ -46,6 +46,10 @@ portfolios = html.Div([
 
         # Coluna 1
         dbc.Col([
+
+            # Efficiency Frontier
+            dcc.Graph(id='efficiency_frontier'),
+
             dbc.Label(
                 html.B('Risco do Portfolio')
             ),
@@ -63,16 +67,6 @@ portfolios = html.Div([
 
             html.Hr(),
 
-            # Expected Returns
-            dbc.Label(
-                html.B('Retorno Esperado')
-            ),
-            html.Div(
-                id = 'portfolios_returns'
-            ),
-
-            html.Hr(),
-
             dcc.Graph(
                 id = 'portfolios_table'
             )
@@ -83,10 +77,24 @@ portfolios = html.Div([
         ),
 
         # Coluna 2
-        dbc.Col(
+        dbc.Col([
+
+            # Expected Returns
+            dbc.Label(
+                html.B('Retorno Esperado')
+            ),
+            html.Div(
+                id = 'portfolios_returns'
+            ),
+
+            html.Hr(),
+
+            # Donut
             dcc.Graph(
                 id = 'portfolios_chart'
-            ),
+            )
+            
+        ],
             style = {'padding': 20},
             width = 12,
             lg = 6
