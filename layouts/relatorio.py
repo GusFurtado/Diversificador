@@ -32,8 +32,7 @@ corr_timeline_modal = dbc.Modal([
             id = 'corr_timeline_chart',
             config = utils.GRAPH_CONFIG
         )
-    ),
-    dbc.ModalFooter()
+    )
 ],
     id = 'corr_timeline_modal',
     is_open = False,
@@ -96,6 +95,60 @@ portfolios = html.Div([
 
 
 
+risk_free = html.Div([
+
+    dbc.Row([
+
+        # Coluna 1
+        dbc.Col([
+
+            # Risk-Free Capital Allocation
+            dbc.Label(
+                html.B('Escolha um portfólio')
+            ),
+            dcc.Graph(
+                id = 'risk_free_allocation',
+                config = utils.GRAPH_CONFIG
+            )
+
+        ],
+            style = {'padding': 20},
+            width = 12,
+            lg = 6
+        ),
+
+        # Coluna 2
+        dbc.Col([
+
+            # Expected Returns
+            dbc.Label(
+                html.B('Retorno Esperado')
+            ),
+            html.Div(
+                id = 'risk_free_returns'
+            ),
+
+            # Table
+            dcc.Graph(
+                id = 'risk_free_table',
+                config = utils.GRAPH_CONFIG
+            )
+
+        ],
+            style = {'padding': 20},
+            width = 12,
+            lg = 6
+        )
+
+    ],
+        no_gutters = True
+    )
+],
+    className = 'shadow'
+)
+
+
+
 layout = html.Div([
     dcc.Location(id='location'),
     dcc.Store(id='dataframe'),
@@ -105,7 +158,9 @@ layout = html.Div([
     dbc.Container([
         html.Div(id='corr_table'),
         html.Hr(),
-        portfolios
+        portfolios,
+        #html.Hr(),
+        #risk_free
     ],
         style = {'padding-bottom': 20}
     )

@@ -261,6 +261,69 @@ class CorrelationTimeline:
 
     def plot(self, data):
         '''
+        Gera uma timeline de cotações de um ticker (quando o valor de ticker_a
+        for igual ao ticker_b) ou dois tickers (quando ticker_a e ticker_b
+        forem diferentes).
+
+        Parameters
+        ----------
+        data : dict
+            Histórico de cotações dos tickers.
+
+        Returns
+        -------
+        plotly.graph_objects.Figure
+            Gráfico de linhas com histórico de cotações de um ou dois tickers.
+
+        ----------------------------------------------------------------------
+        '''
+
+        if self.ticker_a == self.ticker_b:
+            fig = self.plot_single(data)
+        else:
+            fig = self.plot_multi(data)
+
+        fig.update_layout(
+            margin = {'b': 10, 't': 10},
+            showlegend = False
+        )
+        
+        return fig
+    
+
+    def plot_single(self, data:dict) -> go.Figure:
+        '''
+        Gera o gráfico de timeline de um ticker.
+
+        Parameters
+        ----------
+        data : dict
+            Histórico de cotações dos tickers.
+
+        Returns
+        -------
+        plotly.graph_objects.Figure
+            Gráfico de linhas com histórico de cotações de um ticker.
+
+        ----------------------------------------------------------------------
+        '''
+
+        ds = pd.read_json(data)[self.ticker_a]
+        ds = ds.dropna()
+
+        return go.Figure(
+            data = go.Scatter(
+                x = ds.index,
+                y = ds,
+                name = self.ticker_a,
+                hoverinfo = 'skip'
+            )
+        )
+
+
+
+    def plot_multi(self, data:dict) -> go.Figure:
+        '''
         Gera o gráfico com as timelines dos dois tickers.
 
         Parameters
@@ -283,7 +346,6 @@ class CorrelationTimeline:
         fig = go.Figure(
             layout = {
                 'yaxis': {'visible': False},
-                'showlegend': False
             }
         )
 
@@ -317,17 +379,23 @@ class CorrelationTimeline:
         ----------------------------------------------------------------------
         '''
 
-        return [
-            html.Span(
+        if self.ticker_a == self.ticker_b:
+            return html.Span(
                 self.ticker_a,
                 className = 'corr_title blue'
-            ),
-            html.Span('  x  '),
-            html.Span(
-                self.ticker_b,
-                className = 'corr_title red'
             )
-        ]
+        else:
+            return [
+                html.Span(
+                    self.ticker_a,
+                    className = 'corr_title blue'
+                ),
+                html.Span('  x  '),
+                html.Span(
+                    self.ticker_b,
+                    className = 'corr_title red'
+                )
+            ]
 
 
 
