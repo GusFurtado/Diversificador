@@ -99,10 +99,8 @@ def set_name(_, ticker, b3):
 @tickers_app.callback(
     Output('location', 'href'),
     Input('analyse_portfolio_button', 'n_clicks'),
-    State({'type': 'input', 'uid': ALL}, 'value'),
-    State({'type': 'checkbox', 'uid': ALL}, 'checked'),
     prevent_initial_call = True)
-def go_to_report(_, tickers, b3):
+def go_to_report(_):
     hashs = ''.join(flask.session.values())
     return f'http://{gethostname()}:{cfg.PORT}/relatorio/{hashs}'
 
@@ -111,7 +109,7 @@ def go_to_report(_, tickers, b3):
 @relatorio_app.callback(
     Output('corr_table', 'children'),
     Output('efficiency_frontier', 'figure'),
-    Output('dataframe', 'data'),
+    Output('monthly_returns', 'data'),
     Output('portfolios_data', 'data'),
     Input('location', 'hash'))
 def load_relatorio(hashtags):
@@ -128,18 +126,30 @@ def load_relatorio(hashtags):
 @relatorio_app.callback(
     Output('portfolios_returns', 'children'),
     Output('portfolios_chart', 'figure'),
+    Output('selected_portfolio', 'data'),
     Input('efficiency_frontier', 'clickData'),
     Input('portfolios_data', 'data'))
 def select_portfolio_risk(click, data):
     if click is None:
-        value = 0
+        portfolio = 0
     else:
-        value = click['points'][0]['pointNumber']
-    report = utils.MarkowitzAllocation(data, value)
+        portfolio = click['points'][0]['pointNumber']
+    report = utils.MarkowitzAllocation(data, portfolio)
     return (
         report.expected_returns(),
-        report.pie()
+        report.pie(),
+        report.portfolio.to_json()
     )
+
+
+
+@relatorio_app.callback(
+    Output('capital_allocation_line', 'figure'),
+    Input('selected_portfolio', 'data'),
+    prevent_inital_call = True)
+def update_capital_allocation_line(data):
+    print(data)
+    raise PreventUpdate
 
 
 
@@ -148,7 +158,7 @@ def select_portfolio_risk(click, data):
     Output('corr_timeline_title', 'children'),
     Output('corr_timeline_chart', 'figure'),
     Input({'ticker_a': ALL, 'ticker_b': ALL}, 'n_clicks'),
-    State('dataframe', 'data'),
+    State('monthly_returns', 'data'),
     prevent_initial_call = True)
 def load_corr_timeline(tickers, data):
     if all(click is None for click in tickers):

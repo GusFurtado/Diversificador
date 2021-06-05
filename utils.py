@@ -242,7 +242,7 @@ class Markowitz:
 class CorrelationTimeline:
     '''
     Carrega toda a estrutura do modal de comparação dos históricos de dois
-    tickers  diferentes.
+    tickers diferentes.
 
     Parameters
     ----------
@@ -287,7 +287,7 @@ class CorrelationTimeline:
             margin = {'b': 10, 't': 10},
             showlegend = False
         )
-        
+
         return fig
     
 
@@ -414,8 +414,8 @@ class MarkowitzAllocation:
     '''
 
     def __init__(self, data:dict, portfolio:int):
-        self.df = pd.read_json(data).round(3)
-        self.portfolio = portfolio
+        df = pd.read_json(data).round(3)
+        self.portfolio = df.iloc[portfolio,:]
 
     
     def pie(self) -> go.Pie:
@@ -432,8 +432,8 @@ class MarkowitzAllocation:
 
         return go.Figure(
             data = go.Pie(
-                labels = self.df.columns[:-2],
-                values = self.df.iloc[self.portfolio,:-2],
+                labels = self.portfolio.index[:-2],
+                values = self.portfolio[:-2],
                 hole = 0.4,
                 textinfo = 'label+percent',
                 hoverinfo = 'skip'
@@ -445,14 +445,64 @@ class MarkowitzAllocation:
 
 
     def expected_returns(self):
+        '''
+        Retorno e risco esperado para o portfólio selecionado.
+
+        Returns
+        -------
+        list of dash_html_components
+            Risco e retorno esperado em formato HTML.
+
+        ----------------------------------------------------------------------
+        '''
+
         return [
             html.B(
-                f'{100*self.df.iloc[self.portfolio,-2]:.1f}% a.m.',
+                f'{100*self.portfolio[-2]:.1f}% a.m.',
                 style = {'font-size': 24}    
             ),
             html.Span(
-                f'(±{100*self.df.iloc[self.portfolio,-1]:.1f}%)',
+                f'(±{100*self.portfolio[-1]:.1f}%)',
                 style = {'font-size': 16},
                 className = 'ml-2'
             )
         ]
+
+
+
+class CapitalAllocation:
+
+    def __init__(self):
+        return
+
+    
+    def selic(self):
+        '''
+        Captura a atual taxa SELIC.
+
+        Returns
+        -------
+        int
+            Taxa SELIC.
+
+        ----------------------------------------------------------------------
+        '''
+
+        return
+
+
+    def capital_allocation_line(self):
+        '''
+        Gera um gráfico de alocação de capital risk-free.
+
+        Returns
+        -------
+        plotly.graph_objects.Figure
+            Capital Allocation Line
+
+        ----------------------------------------------------------------------
+        '''
+
+        return go.Figure(
+            go.Scatter()
+        )

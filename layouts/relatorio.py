@@ -102,12 +102,12 @@ risk_free = html.Div([
         # Coluna 1
         dbc.Col([
 
-            # Risk-Free Capital Allocation
+            # Risk-Free Capital Allocation Line
             dbc.Label(
                 html.B('Escolha um portfólio')
             ),
             dcc.Graph(
-                id = 'risk_free_allocation',
+                id = 'capital_allocation_line',
                 config = utils.GRAPH_CONFIG
             )
 
@@ -151,16 +151,17 @@ risk_free = html.Div([
 
 layout = html.Div([
     dcc.Location(id='location'),
-    dcc.Store(id='dataframe'),
+    dcc.Store(id='monthly_returns'),
     dcc.Store(id='portfolios_data'),
+    dcc.Store(id='selected_portfolio'),
     corr_timeline_modal,
     jumbotron,
     dbc.Container([
         html.Div(id='corr_table'),
         html.Hr(),
         portfolios,
-        #html.Hr(),
-        #risk_free
+        html.Hr(),
+        risk_free
     ],
         style = {'padding-bottom': 20}
     )
