@@ -14,6 +14,14 @@ solvers.options['show_progress'] = False
 
 
 
+GRAPH_CONFIG = {
+    'scrollZoom': False,
+    'displayModeBar': False,
+    'locale': 'pt'
+}
+
+
+
 def check_ticker(ticker:str) -> str:
     '''
     Valida o ticker desejado e retorna seu nome.
@@ -203,16 +211,30 @@ class Markowitz:
 
 
     def efficiency_frontier(self):
+        text = [f'<b>Retorno Esperado:</b> {100*y:.1f}%<br><b>Risco:</b> ±{100*x:.1f}%' \
+            for x, y in zip(self.portfolios['Risco'], self.portfolios['Retorno Esperado'])]
         return go.Figure(
-            go.Scatter(
+            data = go.Scatter(
                 x = self.portfolios['Risco'],
                 y = self.portfolios['Retorno Esperado'],
                 name = 'Fronteira da Eficiência',
                 mode = 'markers',
                 marker = {
-                    'size': 10
-                }
-            )
+                    'size': 10,
+                    'color': 'cyan',
+                    'line': {
+                        'color': 'blue',
+                        'width': 2
+                    }
+                },
+                hovertext = text,
+                hoverinfo = 'text'
+            ),
+            layout = {
+                'margin': {'b': 10, 't': 10},
+                'xaxis': {'tickformat': ',.1%'},
+                'yaxis': {'tickformat': ',.1%'},
+            }
         )
 
 
@@ -324,33 +346,8 @@ class MarkowitzAllocation:
     '''
 
     def __init__(self, data:dict, portfolio:int):
-        self.df = pd.read_json(data)
+        self.df = pd.read_json(data).round(3)
         self.portfolio = portfolio
-
-
-    def table(self) -> dbc.Table:
-        '''
-        Gera uma tabela HTML de alocação de recursos.
-
-        Returns
-        -------
-        dash_bootstrap_components.Table
-            Tabela de alocação de recursos formatada.
-
-        ----------------------------------------------------------------------
-        '''
-
-        return go.Figure(
-            go.Table(
-                header = {'values': ['Recurso', 'Alocação']},
-                cells = {'values': [
-                    self.df.columns[:-2],
-                    self.df.iloc[self.portfolio,:-2].apply(
-                        lambda x: f'{100*x:.1f}%'
-                    )
-                ]}
-            )
-        )
 
     
     def pie(self) -> go.Pie:
@@ -369,10 +366,12 @@ class MarkowitzAllocation:
             data = go.Pie(
                 labels = self.df.columns[:-2],
                 values = self.df.iloc[self.portfolio,:-2],
-                hole = 0.5
+                hole = 0.4,
+                textinfo = 'label+percent',
+                hoverinfo = 'skip'
             ),
             layout = go.Layout(
-                margin = {'b': 20, 't': 20}
+                margin = {'b': 0, 't': 0}
             )
         )
 

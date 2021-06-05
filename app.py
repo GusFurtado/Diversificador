@@ -126,7 +126,6 @@ def load_relatorio(hashtags):
 
 
 @relatorio_app.callback(
-    Output('portfolios_table', 'figure'),
     Output('portfolios_returns', 'children'),
     Output('portfolios_chart', 'figure'),
     Input('efficiency_frontier', 'clickData'),
@@ -138,7 +137,6 @@ def select_portfolio_risk(click, data):
         value = click['points'][0]['pointNumber']
     report = utils.MarkowitzAllocation(data, value)
     return (
-        report.table(),
         report.expected_returns(),
         report.pie()
     )
@@ -159,9 +157,9 @@ def load_corr_timeline(tickers, data):
     fig = utils.CorrelationTimeline(cc[3], cc[7])
     
     return (
-        True,               # is_open
-        fig.title(),        # title
-        fig.plot(data)      # chart
+        True,
+        fig.title(),
+        fig.plot(data)
     )
 
 

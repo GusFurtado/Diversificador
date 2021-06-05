@@ -4,6 +4,7 @@ import dash_core_components as dcc
 import dash_html_components as html
 
 import app_config as cfg
+import utils
 
 
 
@@ -28,7 +29,8 @@ corr_timeline_modal = dbc.Modal([
     ),
     dbc.ModalBody(
         dcc.Graph(
-            id = 'corr_timeline_chart'
+            id = 'corr_timeline_chart',
+            config = utils.GRAPH_CONFIG
         )
     ),
     dbc.ModalFooter()
@@ -52,12 +54,10 @@ portfolios = html.Div([
                 html.B('Escolha um portfólio')
             ),
             dcc.Graph(
-                id = 'efficiency_frontier'
-            ),
-
-            dcc.Graph(
-                id = 'portfolios_table'
+                id = 'efficiency_frontier',
+                config = utils.GRAPH_CONFIG
             )
+
         ],
             style = {'padding': 20},
             width = 12,
@@ -75,11 +75,10 @@ portfolios = html.Div([
                 id = 'portfolios_returns'
             ),
 
-            html.Hr(),
-
             # Donut
             dcc.Graph(
-                id = 'portfolios_chart'
+                id = 'portfolios_chart',
+                config = utils.GRAPH_CONFIG
             )
 
         ],
