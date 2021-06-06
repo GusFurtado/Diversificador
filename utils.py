@@ -54,19 +54,13 @@ def check_ticker(ticker:str) -> str:
     try:
         t = yfinance.Ticker(ticker)
         name = t.info['longName'] if 'longName' in t.info else t.info['shortName']
-        color = 'success'
-        status = [
-            html.I(className='fas fa-check-circle mr-2'),
-            html.Span('Ticker validado')
-        ]
+        color = 'primary'
+        status = 'Ticker inserido'
 
     except:
-        name = 'Ticker não encontrado'
+        name = f'Ticker "{ticker}" não encontrado'
         color = 'danger'
-        status = [
-            html.I(className='fas fa-times-circle mr-2'),
-            html.Span('Tente novamente')
-        ]
+        status = 'Erro! Tente novamente'
 
     return name, color, status
 

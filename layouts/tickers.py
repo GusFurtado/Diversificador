@@ -4,6 +4,14 @@ import dash_html_components as html
 
 
 
+toast = dbc.Toast(
+    id = 'ticker_toast',
+    dismissable = True,
+    is_open = False
+)
+
+
+
 input_box = dbc.Card([
     dbc.CardHeader([
         html.I(className='fas fa-tags mr-2'),
@@ -70,6 +78,7 @@ input_box = dbc.Card([
 layout = html.Div([
     dcc.Location(id='location'),
     dcc.Store(data=[], id='ticker_data'),
+    toast,
     input_box
 ],
     id = 'ticker_box'

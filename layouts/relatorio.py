@@ -82,7 +82,8 @@ portfolios = html.Div([
         no_gutters = True
     )
 ],
-    className = 'shadow'
+    className = 'shadow',
+    style = {'background-color': 'white'}
 )
 
 
@@ -136,7 +137,8 @@ risk_free = html.Div([
         no_gutters = True
     )
 ],
-    className = 'shadow'
+    className = 'shadow',
+    style = {'background-color': 'white'}
 )
 
 
@@ -149,7 +151,10 @@ layout = html.Div([
     corr_timeline_modal,
     jumbotron,
     dbc.Container([
-        html.Div(id='corr_table'),
+        html.Div(
+            id='corr_table',
+            style = {'background-color': 'white'}    
+        ),
         html.Hr(),
         portfolios,
         html.Hr(),

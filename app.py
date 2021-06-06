@@ -65,53 +65,39 @@ def render_relatorio():
 
 
 
-# @tickers_app.callback(
-#     Output('container', 'n_clicks'),
-#     Input('container', 'style'))
-# def clear_flask_session_on_init(_):
-#     flask.session.clear()
-#     raise PreventUpdate
-
-
-
-# @tickers_app.callback(
-#     Output({'type': 'name', 'uid': MATCH}, 'children'),
-#     Output({'type': 'button', 'uid': MATCH}, 'color'),
-#     Output({'type': 'button', 'uid': MATCH}, 'children'),
-#     Input({'type': 'button', 'uid': MATCH}, 'n_clicks'),
-#     State({'type': 'input', 'uid': MATCH}, 'value'),
-#     State({'type': 'checkbox', 'uid': MATCH}, 'checked'),
-#     prevent_initial_call = True)
-# def set_name(_, ticker, b3):
-#     ticker = ticker.upper()
-#     if b3:
-#         ticker = f'{ticker}.SA'
-#     name, color, status = utils.check_ticker(ticker)
-#     cc = dash.callback_context.triggered[0]['prop_id'].split('"')[7]
-#     if color == 'success':
-#         flask.session[cc] = f'#{ticker}'
-#     else:
-#         flask.session.pop(cc, None)
-#     return name, color, status
-
-
-
 @tickers_app.callback(
     Output('ticker_data', 'data'),
+    Output('ticker_toast', 'children'),
+    Output('ticker_toast', 'header'),
+    Output('ticker_toast', 'icon'),
+    Output('ticker_toast', 'is_open'),
+    Output('ticker_input', 'value'),
     Input('ticker_add', 'n_clicks'),
     State('ticker_input', 'value'),
     State('ticker_checkbox', 'checked'),
     State('ticker_data', 'data'),
     prevent_initial_call = True)
 def add_ticker_to_data(_, ticker, b3, data):
+
+    ticker = ticker.upper()
     if b3:
-        ticker = f'{ticker.upper()}.SA'
-    full_name, _, _ = utils.check_ticker(ticker)
-    if full_name != 'Ticker não encontrado':
-        data.append(ticker)
-        return data
+        ticker = f'{ticker}.SA'
+
+    if ticker in data:
+        full_name = f'Ticker "{ticker}" já está na carteira'
+        color = 'danger'
+        header = 'Erro! Tente novamente'
     else:
-        raise PreventUpdate
+        full_name, color, header = utils.check_ticker(ticker)
+    
+    if color == 'primary':
+        data.append(ticker)
+        value = None
+    else:
+        data = dash.no_update
+        value = dash.no_update
+    
+    return data, full_name, header, color, True, value
 
 
 
@@ -123,7 +109,7 @@ def generate_tags(data):
         dbc.Col(
             utils.tag(ticker),
             width = 'auto',
-            className = 'mb-1'
+            className = 'mb-3'
         ) for ticker in data
     ]
 
