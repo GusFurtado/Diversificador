@@ -1,11 +1,21 @@
 body {
     font-family: 'Montserrat';
+    background-color: lightgray;
 }
 
 
 
 #container {
     margin-bottom: 30px;
+}
+
+
+
+#ticker_box {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
 }
 
 
