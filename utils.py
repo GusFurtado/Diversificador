@@ -633,3 +633,45 @@ class CapitalAllocation:
         '''
 
         return p*risk_free_rate + (1-p)*value
+
+
+    def expected_returns(self, p:float) -> list:
+        '''
+        Retorno e risco esperado para o portfólio selecionado.
+
+        Parameters
+        ----------
+        p : float
+            Proporção da taxa risk-free que será adicionada à variável.
+
+        Returns
+        -------
+        list of dash_html_components
+            Risco e retorno esperado em formato HTML.
+
+        ----------------------------------------------------------------------
+        '''
+
+        retorno = 100 * self.weigh_risk_free(
+            value = self.data['Retorno Esperado'],
+            risk_free_rate = self.selic,
+            p = p
+        )
+
+        risco = 100 * self.weigh_risk_free(
+            value = self.data['Risco'],
+            risk_free_rate = 0,
+            p = p
+        )
+
+        return [
+            html.B(
+                f'{retorno:.1f}% a.m.',
+                style = {'font-size': 24}    
+            ),
+            html.Span(
+                f'(±{risco:.1f}%)',
+                style = {'font-size': 16},
+                className = 'ml-2'
+            )
+        ]

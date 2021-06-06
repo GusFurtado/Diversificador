@@ -123,7 +123,8 @@ risk_free = html.Div([
                 ),
                 html.Tbody(id='risk_free_table')
             ],
-                bordered = True
+                bordered = True,
+                className = 'mt-4'
             )
         ],
             style = {'padding': 20},

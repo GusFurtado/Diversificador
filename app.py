@@ -142,6 +142,7 @@ def select_portfolio_risk(click, data):
 
 @relatorio_app.callback(
     Output('capital_allocation_line', 'figure'),
+    Output('risk_free_returns', 'children'),
     Output('risk_free_table', 'children'),
     Input('selected_portfolio', 'data'),
     Input('capital_allocation_line', 'clickData'),
@@ -151,6 +152,7 @@ def update_capital_allocation_line(data, click):
     report = utils.CapitalAllocation(data)
     return (
         report.capital_allocation_line(),
+        report.expected_returns(p/20),
         report.final_table(p/20)
     )
 
