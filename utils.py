@@ -8,7 +8,6 @@ import dash_html_components as html
 import cvxopt as opt
 from cvxopt import blas, solvers
 import numpy as np
-from numpy.core.numeric import full
 import pandas as pd
 import plotly.graph_objects as go
 import yfinance
@@ -74,7 +73,9 @@ def tag(ticker:str):
         ),
         html.I(
             className = 'fas fa-times ml-3',
-            style = {'cursor': 'pointer'}
+            style = {'cursor': 'pointer'},
+            id = {'ticker_remove': ticker},
+            n_clicks_timestamp = 0
         )
     ],
         pill = True,

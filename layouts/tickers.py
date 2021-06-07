@@ -62,8 +62,9 @@ input_box = dbc.Card([
                     html.I(className = 'fas fa-angle-double-right ml-2')
                 ],
                     color = 'success',
-                    id = 'analyse_portfolio_button',
-                    block = True
+                    id = 'ticker_analyse',
+                    block = True,
+                    disabled = True
                 ),
                 width = {'size': 8, 'offset': 2}
             )

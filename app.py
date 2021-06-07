@@ -1,7 +1,7 @@
 from socket import gethostname
 
 import dash
-from dash.dependencies import Output, Input, State, ALL, MATCH
+from dash.dependencies import Output, Input, State, ALL
 from dash.exceptions import PreventUpdate
 import dash_bootstrap_components as dbc
 
@@ -21,17 +21,19 @@ server = flask.Flask(__name__)
 server.secret_key = cfg.SECRET_KEY
 pio.templates.default = cfg.PLOTLY_TEMPLATE
 
+external_stylesheets = [
+    dbc.themes.BOOTSTRAP,
+    cfg.MONTSERRAT,
+    cfg.FONTAWESOME
+]
+
 
 
 tickers_app = dash.Dash(
     __name__,
     server = server,
     url_base_pathname = '/tickers/',
-    external_stylesheets = [
-        dbc.themes.BOOTSTRAP,
-        cfg.MONTSERRAT,
-        cfg.FONTAWESOME
-    ]
+    external_stylesheets = external_stylesheets
 )
 
 tickers_app.title = cfg.NAME
@@ -43,7 +45,7 @@ relatorio_app = dash.Dash(
     __name__,
     server = server,
     url_base_pathname = '/relatorio/',
-    external_stylesheets=[dbc.themes.BOOTSTRAP, cfg.MONTSERRAT]
+    external_stylesheets = external_stylesheets
 )
 
 relatorio_app.title = cfg.NAME
@@ -73,20 +75,37 @@ def render_relatorio():
     Output('ticker_toast', 'is_open'),
     Output('ticker_input', 'value'),
     Input('ticker_add', 'n_clicks'),
+    Input({'ticker_remove': ALL}, 'n_clicks_timestamp'),
     State('ticker_input', 'value'),
     State('ticker_checkbox', 'checked'),
     State('ticker_data', 'data'),
     prevent_initial_call = True)
-def add_ticker_to_data(_, ticker, b3, data):
+def add_ticker_to_data(_, clicks, ticker, b3, data):
 
+    # Remover ticker
+    cc = dash.callback_context.triggered[0]['prop_id']
+    if cc != 'ticker_add.n_clicks':
+        ticker_to_remove = cc.split('"')[3]
+        data.pop(clicks.index(max(clicks)))
+        return (
+            data,
+            f'Ticker "{ticker_to_remove}" removido da carteira.',
+            'Ticker removido',
+            'danger',
+            True,
+            dash.no_update
+        )
+
+    # Formatar ticker
     ticker = ticker.upper()
-    if b3:
+    if b3 and not ticker.endswith('.SA'):
         ticker = f'{ticker}.SA'
 
+    # Adicionar ticker
     if ticker in data:
-        full_name = f'Ticker "{ticker}" já está na carteira'
+        full_name = f'Ticker "{ticker}" já está na carteira.'
         color = 'danger'
-        header = 'Erro! Tente novamente'
+        header = 'Erro! Tente novamente.'
     else:
         full_name, color, header = utils.check_ticker(ticker)
     
@@ -103,24 +122,27 @@ def add_ticker_to_data(_, ticker, b3, data):
 
 @tickers_app.callback(
     Output('ticker_tags', 'children'),
+    Output('ticker_analyse', 'disabled'),
     Input('ticker_data', 'data'))
 def generate_tags(data):
-    return [
+    tags = [
         dbc.Col(
             utils.tag(ticker),
             width = 'auto',
             className = 'mb-3'
         ) for ticker in data
     ]
+    return tags, len(data)<2
 
 
 
 @tickers_app.callback(
     Output('location', 'href'),
-    Input('analyse_portfolio_button', 'n_clicks'),
+    Input('ticker_analyse', 'n_clicks'),
+    State('ticker_data', 'data'),
     prevent_initial_call = True)
-def go_to_report(_):
-    hashs = ''.join(flask.session.values())
+def go_to_report(_, data):
+    hashs = ''.join([f'#{d}' for d in data])
     return f'http://{gethostname()}:{cfg.PORT}/relatorio/{hashs}'
 
 
