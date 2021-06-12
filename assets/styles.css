@@ -6,8 +6,10 @@ body {
 
 
 
-#container {
+.container {
     margin-bottom: 30px;
+    padding: 20px;
+    background-color: white;
 }
 
 
@@ -25,6 +27,12 @@ body {
     display: flex;
     align-items: center;
     height: 40px;
+}
+
+
+
+#corr_table {
+    margin-bottom: 90px;
 }
 
 

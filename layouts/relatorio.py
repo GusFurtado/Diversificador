@@ -81,10 +81,7 @@ portfolios = html.Div([
     ],
         no_gutters = True
     )
-],
-    className = 'shadow',
-    style = {'background-color': 'white'}
-)
+])
 
 
 
@@ -136,10 +133,7 @@ risk_free = html.Div([
     ],
         no_gutters = True
     )
-],
-    className = 'shadow',
-    style = {'background-color': 'white'}
-)
+])
 
 
 
@@ -151,15 +145,20 @@ layout = html.Div([
     corr_timeline_modal,
     jumbotron,
     dbc.Container([
-        html.Div(
-            id='corr_table',
-            style = {'background-color': 'white'}    
-        ),
-        html.Hr(),
+
+        html.H1('Matriz de Correlação'),
+        html.Hr(style={'border': '1px solid blue'}),
+        html.Div(id='corr_table'),
+        
+        html.H1('Renda Variável'),
+        html.Hr(style={'border': '1px solid blue'}),
         portfolios,
-        html.Hr(),
+
+        html.H1('Renda Fixa', className='mt-5'),
+        html.Hr(style={'border': '1px solid blue'}),
         risk_free
+
     ],
-        style = {'padding-bottom': 20}
+        className = 'shadow'
     )
 ])

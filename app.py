@@ -149,7 +149,6 @@ def go_to_report(_, data):
 
 @relatorio_app.callback(
     Output('corr_table', 'children'),
-    Output('efficiency_frontier', 'figure'),
     Output('monthly_returns', 'data'),
     Output('portfolios_data', 'data'),
     Input('location', 'hash'))
@@ -157,7 +156,6 @@ def load_relatorio(hashtags):
     report = utils.Markowitz(hashtags)
     return (
         report.corr_table(),
-        report.efficiency_frontier(),
         report.df.to_json(),
         report.portfolios.to_json()
     )
@@ -168,6 +166,7 @@ def load_relatorio(hashtags):
     Output('portfolios_returns', 'children'),
     Output('portfolios_chart', 'figure'),
     Output('selected_portfolio', 'data'),
+    Output('efficiency_frontier', 'figure'),
     Input('efficiency_frontier', 'clickData'),
     Input('portfolios_data', 'data'))
 def select_portfolio_risk(click, data):
@@ -176,7 +175,8 @@ def select_portfolio_risk(click, data):
     return (
         report.expected_returns(),
         report.pie(),
-        report.portfolio.to_json()
+        report.portfolio.to_json(),
+        report.efficiency_frontier()
     )
 
 
@@ -192,7 +192,7 @@ def update_capital_allocation_line(data, click):
     p = 0 if click is None else click['points'][0]['pointNumber']
     report = utils.CapitalAllocation(data)
     return (
-        report.capital_allocation_line(),
+        report.capital_allocation_line(p),
         report.expected_returns(p/20),
         report.final_table(p/20)
     )

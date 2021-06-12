@@ -183,8 +183,7 @@ class Markowitz:
                 ]) for i, row in df.iterrows()
             ])
         ],
-            bordered = True,
-            className = 'shadow'
+            bordered = True
         )
 
 
@@ -227,40 +226,6 @@ class Markowitz:
 
         df.index = df.index[::-1]
         self.portfolios = df.sort_index()
-
-
-    def efficiency_frontier(self):
-        text = [f'<b>Retorno Esperado:</b> {100*y:.1f}%<br><b>Risco:</b> ±{100*x:.1f}%' \
-            for x, y in zip(self.portfolios['Risco'], self.portfolios['Retorno Esperado'])]
-        return go.Figure(
-            data = go.Scatter(
-                x = self.portfolios['Risco'],
-                y = self.portfolios['Retorno Esperado'],
-                name = 'Fronteira da Eficiência',
-                mode = 'markers',
-                marker = {
-                    'size': 10,
-                    'color': 'cyan',
-                    'line': {
-                        'color': 'blue',
-                        'width': 2
-                    }
-                },
-                hovertext = text,
-                hoverinfo = 'text'
-            ),
-            layout = {
-                'margin': {'b': 10, 't': 10},
-                'xaxis': {
-                    'tickformat': ',.1%',
-                    'title': {'text': 'Risco'}
-                },
-                'yaxis': {
-                    'tickformat': ',.1%',
-                    'title': {'text': r'Retorno Esperado (% a.m.)'}
-                },
-            }
-        )
 
 
 
@@ -439,8 +404,49 @@ class MarkowitzAllocation:
     '''
 
     def __init__(self, data:dict, portfolio:int):
-        df = pd.read_json(data).round(3)
-        self.portfolio = df.iloc[portfolio,:]
+        self.p = portfolio
+        self.portfolios = pd.read_json(data).round(3)
+        self.portfolio = self.portfolios.iloc[portfolio,:]
+
+
+    def efficiency_frontier(self):
+        text = [f'<b>Retorno Esperado:</b> {100*y:.1f}%<br><b>Risco:</b> ±{100*x:.1f}%' \
+            for x, y in zip(self.portfolios['Risco'], self.portfolios['Retorno Esperado'])]
+        
+        marker_color = ['yellow' if n==self.p else 'cyan' \
+            for n in range(101)]
+        marker_size = [12 if n==self.p else 8 for n in range(101)]
+        
+        return go.Figure(
+            data = go.Scatter(
+                x = self.portfolios['Risco'],
+                y = self.portfolios['Retorno Esperado'],
+                name = 'Fronteira da Eficiência',
+                mode = 'markers',
+                marker = {
+                    'size': marker_size,
+                    'color': marker_color,
+                    'opacity': 1,
+                    'line': {
+                        'color': 'blue',
+                        'width': 2
+                    }
+                },
+                hovertext = text,
+                hoverinfo = 'text'
+            ),
+            layout = {
+                'margin': {'b': 10, 't': 10},
+                'xaxis': {
+                    'tickformat': ',.1%',
+                    'title': {'text': 'Risco'}
+                },
+                'yaxis': {
+                    'tickformat': ',.1%',
+                    'title': {'text': r'Retorno Esperado (% a.m.)'}
+                },
+            }
+        )
 
     
     def pie(self) -> go.Pie:
@@ -529,7 +535,7 @@ class CapitalAllocation:
         self.selic = (float(ao_ano)/100 + 1)**(1/12) - 1
 
 
-    def capital_allocation_line(self):
+    def capital_allocation_line(self, selected_portfolio:int) -> go.Figure:
         '''
         Gera um gráfico de alocação de capital risk-free.
 
@@ -541,7 +547,7 @@ class CapitalAllocation:
         ----------------------------------------------------------------------
         '''
 
-        razao = [i/20 for i in range(0,21)]
+        razao = [i/20 for i in range(21)]
         retorno = [
             self.weigh_risk_free(
                 value = self.data['Retorno Esperado'],
@@ -562,6 +568,10 @@ class CapitalAllocation:
             for ra, re, ri in zip(razao, retorno, risco)
         ]
 
+        marker_color = ['yellow' if n==selected_portfolio else 'cyan' \
+            for n in range(21)]
+        marker_size = [12 if n==selected_portfolio else 8 for n in range(21)]
+
         return go.Figure(
             data = go.Scatter(
                 x = razao,
@@ -570,8 +580,9 @@ class CapitalAllocation:
                 hovertext = text,
                 hoverinfo = 'text',
                 marker = {
-                    'size': 10,
-                    'color': 'cyan',
+                    'size': marker_size,
+                    'color': marker_color,
+                    'opacity': 1,
                     'line': {
                         'color': 'blue',
                         'width': 2
