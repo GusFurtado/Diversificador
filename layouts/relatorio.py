@@ -1,5 +1,6 @@
 import dash_bootstrap_components as dbc
 from dash_bootstrap_components._components.Label import Label
+from dash_bootstrap_components._components.Tooltip import Tooltip
 import dash_core_components as dcc
 import dash_html_components as html
 
@@ -10,10 +11,12 @@ import utils
 
 jumbotron = dbc.Jumbotron(
     dbc.Container([
-        html.H1(
-            cfg.NAME,
-            className = 'display-3',
-            style = {'text-align': 'center'}
+        html.Div(
+            html.B(
+                cfg.NAME,
+                style = {'text-shadow': '1px 1px black'}
+            ),
+            className = 'jumbo_title'
         )
     ],
         fluid = True,
@@ -137,6 +140,28 @@ risk_free = html.Div([
 
 
 
+renda_fixa_title = dbc.Row([
+    dbc.Tooltip(
+        'Consideramos a taxa SELIC como renda fixa livre de risco.',
+        target = 'help_renda_fixa'
+    ),
+    dbc.Col(
+        html.H1('Renda Fixa'),
+        width = 'auto'
+    ),
+    dbc.Col(
+        html.I(
+            className = 'fas fa-info-circle',
+            id = 'help_renda_fixa'
+        ),
+        width = 'auto'
+    )
+],
+    className = 'mt-5'
+)
+
+
+
 layout = html.Div([
     dcc.Location(id='location'),
     dcc.Store(id='monthly_returns'),
@@ -148,17 +173,17 @@ layout = html.Div([
 
         html.H1('Matriz de Correlação'),
         html.Hr(style={'border': '1px solid blue'}),
-        html.Div(id='corr_table'),
+        dcc.Loading(html.Div(id='corr_table')),
         
         html.H1('Renda Variável'),
         html.Hr(style={'border': '1px solid blue'}),
         portfolios,
 
-        html.H1('Renda Fixa', className='mt-5'),
+        renda_fixa_title,
         html.Hr(style={'border': '1px solid blue'}),
         risk_free
 
     ],
-        className = 'shadow'
+        className = 'shadow-sm'
     )
 ])

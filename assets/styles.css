@@ -14,6 +14,20 @@ body {
 
 
 
+.jumbotron {
+    background-color: rgba(0, 0, 0, 0);
+    color: white;
+}
+
+
+
+.jumbo_title {
+    text-align: center;
+    font-size: 60px;
+}
+
+
+
 #ticker_box {
     position: fixed;
     top: 50%;
