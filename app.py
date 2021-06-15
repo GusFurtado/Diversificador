@@ -13,6 +13,7 @@ from werkzeug import run_simple
 from layouts import tickers
 from layouts import relatorio
 import app_config as cfg
+import report
 import utils
 
 
@@ -107,7 +108,7 @@ def add_ticker_to_data(_, clicks, ticker, b3, data):
         color = 'danger'
         header = 'Erro! Tente novamente.'
     else:
-        full_name, color, header = utils.check_ticker(ticker)
+        full_name, color, header = utils.get_ticker_name(ticker)
     
     if color == 'primary':
         data.append(ticker)
@@ -153,11 +154,11 @@ def go_to_report(_, data):
     Output('portfolios_data', 'data'),
     Input('location', 'hash'))
 def load_relatorio(hashtags):
-    report = utils.Markowitz(hashtags)
+    r = report.Markowitz(hashtags)
     return (
-        report.corr_table(),
-        report.df.to_json(),
-        report.portfolios.to_json()
+        r.corr_table(),
+        r.df.to_json(),
+        r.portfolios.to_json()
     )
 
 
@@ -171,12 +172,12 @@ def load_relatorio(hashtags):
     Input('portfolios_data', 'data'))
 def select_portfolio_risk(click, data):
     portfolio = 0 if click is None else click['points'][0]['pointNumber']
-    report = utils.MarkowitzAllocation(data, portfolio)
+    r = report.MarkowitzAllocation(data, portfolio)
     return (
-        report.expected_returns(),
-        report.pie(),
-        report.portfolio.to_json(),
-        report.efficiency_frontier()
+        r.expected_returns(),
+        r.pie(),
+        r.portfolio.to_json(),
+        r.efficiency_frontier()
     )
 
 
@@ -190,11 +191,11 @@ def select_portfolio_risk(click, data):
     prevent_inital_call = True)
 def update_capital_allocation_line(data, click):
     p = 0 if click is None else click['points'][0]['pointNumber']
-    report = utils.CapitalAllocation(data)
+    r = report.CapitalAllocation(data)
     return (
-        report.capital_allocation_line(p),
-        report.expected_returns(p/20),
-        report.final_table(p/20)
+        r.capital_allocation_line(p),
+        r.expected_returns(p/20),
+        r.final_table(p/20)
     )
 
 
