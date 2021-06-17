@@ -211,7 +211,7 @@ def load_corr_timeline(tickers, data):
     if all(click is None for click in tickers):
         raise PreventUpdate
     cc = dash.callback_context.triggered[0]['prop_id'].split('"')
-    fig = utils.CorrelationTimeline(cc[3], cc[7])
+    fig = report.CorrelationTimeline(cc[3], cc[7])
     
     return (
         True,

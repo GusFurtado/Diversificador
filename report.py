@@ -1,4 +1,4 @@
-from DadosAbertosBrasil import selic 
+from DadosAbertosBrasil import selic, bacen 
 
 import json
 
@@ -28,25 +28,61 @@ class Markowitz:
     hashtags : str
         Hashtags capturadas da URL.
 
+    Attributes
+    ----------
+    tickers : pandas.core.indexes.base.Index
+        Tickers usados na análise.
+    df : pandas.core.frame.DataFrame
+        Cotações diárias nos últimos 5 anos de cada ticker na sua moeda
+        original.
+    returns : pandas.core.frame.DataFrame
+        Percentual de variação mensal das cotações convertidas para BRL (real)
+        de cada ticker.
+    dolar : pandas.core.frame.DataFrame
+        Cotações do último dia de cada mês do câmbio do Dólar.
+
     --------------------------------------------------------------------------
     '''
 
-    def __init__(self, hashtags:list):
+    def __init__(self, hashtags:str):
         tickers = hashtags.split('#')
-        t = yfinance.Tickers(' '.join(tickers))
         
+        # Coletar dados
+        self.get_dolar()
+        t = yfinance.Tickers(' '.join(tickers))
         self.df = t.history(
             period = '5y',
             auto_adjust = True,
             progress = False
         ).Close
         
+        # Calcular retorno mensal
         self.returns = self.df.groupby(
             self.df.index.strftime('%Y-%m')
-        ).last().pct_change().dropna()
-        
+        ).last()
+        for col in self.returns:
+            if not col.endswith('.SA'):
+                temp = pd.concat(
+                    [self.returns[col], self.dolar],
+                    axis = 1,
+                    join = 'inner'
+                )
+                self.returns[col] = temp[col] * temp.USD
+        self.returns = self.returns.pct_change().dropna()
+
         self.tickers = self.df.columns
         self.optimize()
+
+
+    def get_dolar(self):
+        '''
+        Coleta a cotação do dólar do final de cada mês desde 2015 e salva no
+        atributo `self.dolar`.
+
+        ----------------------------------------------------------------------
+        '''
+        df = bacen.cambio(inicio='2015-01-01', index=True)
+        self.dolar = df.groupby(df.index.strftime('%Y-%m')).last()
 
 
     def corr_table(self) -> dbc.Table:
@@ -341,11 +377,22 @@ class MarkowitzAllocation:
 
 
     def efficiency_frontier(self):
+        '''
+        Fronteira da Eficiência. Gráfico que apresenta o conjunto de
+        portfólios que maximizam o lucro em função do risco (desvio padrão) do
+        portfólio.
+
+        Returns
+        -------
+        plotly.graph_objects.Figure
+            Scatterplot da Fronteira da Eficiência.
+        
+        ----------------------------------------------------------------------
+        '''
+
         text = [f'<b>Retorno Esperado:</b> {100*y:.1f}%<br><b>Risco:</b> ±{100*x:.1f}%' \
             for x, y in zip(self.portfolios['Risco'], self.portfolios['Retorno Esperado'])]
-        
-        marker_color = ['yellow' if n==self.p else 'cyan' \
-            for n in range(101)]
+        marker_color = ['yellow' if n==self.p else 'cyan' for n in range(101)]
         marker_size = [12 if n==self.p else 8 for n in range(101)]
         
         return go.Figure(
@@ -391,11 +438,11 @@ class MarkowitzAllocation:
         
         ----------------------------------------------------------------------
         '''
-
+        ds = self.portfolio[:-2][self.portfolio > 0.0001]
         return go.Figure(
             data = go.Pie(
-                labels = self.portfolio.index[:-2],
-                values = self.portfolio[:-2],
+                labels = ds.index,
+                values = ds,
                 hole = 0.4,
                 textinfo = 'label+percent',
                 hoverinfo = 'skip'
@@ -540,6 +587,22 @@ class CapitalAllocation:
 
 
     def final_table(self, p:float) -> list:
+        '''
+        Tabela final do relatório que informa as porcentagem de alocação da
+        carteira considerando a alocação em renda fixa.
+
+        Parameters
+        ----------
+        p : float
+            Proporção da taxa risk-free que será adicionada à variável.
+
+        Returns
+        -------
+        list of dash_html_components
+            Lista de table rows para a tabela final de alocação.
+
+        ----------------------------------------------------------------------
+        '''
 
         def tr(ticker):
             value = self.weigh_risk_free(
