@@ -18,6 +18,23 @@ solvers.options['show_progress'] = False
 
 
 
+def get_selic() -> float:
+    '''
+    Captura a atual taxa SELIC mensal para usá-la como taxa risk-free.
+
+    Returns
+    -------
+    float
+        Taxa SELIC mensal.
+
+    ----------------------------------------------------------------------
+    '''
+
+    ao_ano = selic(ultimos=1).loc[0,'valor']
+    return (float(ao_ano)/100 + 1)**(1/12) - 1
+
+
+
 class Markowitz:
     '''
     Captura as hashtags da URL e as utiliza como parâmetro para carregar o
@@ -194,6 +211,11 @@ class Markowitz:
 
         df.index = df.index[::-1]
         self.portfolios = df.sort_index()
+        risk_free = get_selic()
+        self.portfolios['Sharpe'] = self.portfolios.apply(
+            lambda row: (row['Retorno Esperado'] - risk_free) / row['Risco'],
+            axis = 1 
+        )
 
 
 
@@ -390,12 +412,20 @@ class MarkowitzAllocation:
         ----------------------------------------------------------------------
         '''
 
-        text = [f'<b>Retorno Esperado:</b> {100*y:.1f}%<br><b>Risco:</b> ±{100*x:.1f}%' \
-            for x, y in zip(self.portfolios['Risco'], self.portfolios['Retorno Esperado'])]
+        text = [
+            f'<b>Retorno Esperado:</b> {y:.1%}<br>' \
+            + f'<b>Risco:</b> ±{x:.1%}<br>' \
+            + f'<b>Sharpe Ratio:</b> {z:.2f}'
+            for x, y, z in zip(
+                self.portfolios['Risco'],
+                self.portfolios['Retorno Esperado'],
+                self.portfolios['Sharpe']
+            )
+        ]
         marker_color = ['yellow' if n==self.p else 'cyan' for n in range(101)]
         marker_size = [12 if n==self.p else 8 for n in range(101)]
-        
-        return go.Figure(
+
+        fig = go.Figure(
             data = go.Scatter(
                 x = self.portfolios['Risco'],
                 y = self.portfolios['Retorno Esperado'],
@@ -425,6 +455,22 @@ class MarkowitzAllocation:
                 },
             }
         )
+        
+        max_sharpe = self.portfolios['Sharpe'].idxmax()
+        fig.add_annotation(
+            x = self.portfolios.loc[max_sharpe, 'Risco'],
+            y = self.portfolios.loc[max_sharpe, 'Retorno Esperado'],
+            text = 'Maior Sharpe Ratio',
+            showarrow = True,
+            arrowhead = 1,
+            arrowwidth = 2,
+            axref = 'pixel',
+            ax = 100,
+            ayref = 'pixel',
+            ay = 20
+        )
+
+        return fig
 
     
     def pie(self) -> go.Pie:
@@ -438,7 +484,7 @@ class MarkowitzAllocation:
         
         ----------------------------------------------------------------------
         '''
-        ds = self.portfolio[:-2][self.portfolio > 0.0001]
+        ds = self.portfolio[:-3][self.portfolio > 0.0001]
         return go.Figure(
             data = go.Pie(
                 labels = ds.index,
@@ -467,11 +513,11 @@ class MarkowitzAllocation:
 
         return [
             html.B(
-                f'{100*self.portfolio[-2]:.1f}% a.m.',
+                f'{self.portfolio[-3]:.1%} a.m.',
                 style = {'font-size': 24}    
             ),
             html.Span(
-                f'(±{100*self.portfolio[-1]:.1f}%)',
+                f'(±{self.portfolio[-2]:.1%})',
                 style = {'font-size': 16},
                 className = 'ml-2'
             )
@@ -499,18 +545,7 @@ class CapitalAllocation:
 
     def __init__(self, data:dict):
         self.data = json.loads(data)
-        self.get_selic()
-
-    
-    def get_selic(self):
-        '''
-        Captura a atual taxa SELIC mensal para usá-la como taxa risk-free.
-
-        ----------------------------------------------------------------------
-        '''
-
-        ao_ano = selic(ultimos=1).loc[0,'valor']
-        self.selic = (float(ao_ano)/100 + 1)**(1/12) - 1
+        self.selic = get_selic()
 
 
     def capital_allocation_line(self, selected_portfolio:int) -> go.Figure:
@@ -541,8 +576,8 @@ class CapitalAllocation:
             ) for p in razao
         ]
         text = [
-            f'<b>Proporção de Renda Fixa:</b> {100*ra:.1f}%<br>' \
-            + f'<b>Retorno Esperado:</b> {100*re:.1f} ± {100*ri:.1f}% a.m.' \
+            f'<b>Proporção de Renda Fixa:</b> {ra:.0%}<br>' \
+            + f'<b>Retorno Esperado:</b> {100*re:.1f} ± {ri:.1%} a.m.' \
             for ra, re, ri in zip(razao, retorno, risco)
         ]
 
@@ -574,7 +609,7 @@ class CapitalAllocation:
             layout = {
                 'margin': {'b': 10, 't': 10},
                 'xaxis': {
-                    'tickformat': ',.1%',
+                    'tickformat': ',.0%',
                     'autorange': 'reversed',
                     'title': {'text': 'Proporção de Renda Fixa'}
                 },
@@ -612,16 +647,16 @@ class CapitalAllocation:
             )
             return html.Tr([
                 html.Td(ticker),
-                html.Td(f'{100*value:.1f}%')
+                html.Td(f'{value:.1%}')
             ])
 
         renda_fixa = [
             html.Td('Renda Fixa'),
-            html.Td(f'{100*p:.1f}%')    
+            html.Td(f'{p:.1%}')    
         ]
 
         renda_variavel = [tr(ticker) for ticker in self.data \
-            if ticker not in ['Retorno Esperado', 'Risco']]
+            if ticker not in ['Retorno Esperado', 'Risco', 'Sharpe']]
 
         return renda_fixa + renda_variavel
 
@@ -672,13 +707,13 @@ class CapitalAllocation:
         ----------------------------------------------------------------------
         '''
 
-        retorno = 100 * self.weigh_risk_free(
+        retorno = self.weigh_risk_free(
             value = self.data['Retorno Esperado'],
             risk_free_rate = self.selic,
             p = p
         )
 
-        risco = 100 * self.weigh_risk_free(
+        risco = self.weigh_risk_free(
             value = self.data['Risco'],
             risk_free_rate = 0,
             p = p
@@ -686,11 +721,11 @@ class CapitalAllocation:
 
         return [
             html.B(
-                f'{retorno:.1f}% a.m.',
+                f'{retorno:.1%} a.m.',
                 style = {'font-size': 24}    
             ),
             html.Span(
-                f'(±{risco:.1f}%)',
+                f'(±{risco:.1%})',
                 style = {'font-size': 16},
                 className = 'ml-2'
             )
