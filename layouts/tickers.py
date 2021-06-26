@@ -12,6 +12,35 @@ toast = dbc.Toast(
 
 
 
+logo = html.Div([
+    html.Div(
+        'Desenvolvido com',
+        style = {
+            'font-size': 12,
+            'font-weight': 'bold',
+            'color': 'white'
+        }
+    ),
+    html.Div(
+        html.A(
+            html.Img(
+                src = 'https://raw.githubusercontent.com/GusFurtado/DadosAbertosBrasil/master/assets/logo.png',
+                height = 40,
+                alt = 'Dados Abertos Brasil'
+            ),
+            href = 'https://www.gustavofurtado.com/dab.html'
+        )
+    )
+],
+    style = {
+        'position': 'fixed',
+        'right': 10,
+        'bottom': 10
+    }
+)
+
+
+
 input_box = dbc.Card([
     dbc.CardHeader([
         html.I(className='fas fa-tags mr-2'),
@@ -77,10 +106,13 @@ input_box = dbc.Card([
 
 
 layout = html.Div([
-    dcc.Location(id='location'),
-    dcc.Store(data=[], id='ticker_data'),
-    toast,
-    input_box
-],
-    id = 'ticker_box'
-)
+    html.Div([
+        dcc.Location(id='location'),
+        dcc.Store(data=[], id='ticker_data'),
+        toast,
+        input_box
+    ],
+        id = 'ticker_box'
+    ),
+    logo
+])
