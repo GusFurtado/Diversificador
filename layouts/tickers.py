@@ -2,6 +2,8 @@ import dash_bootstrap_components as dbc
 import dash_core_components as dcc
 import dash_html_components as html
 
+from utils import menu_ajuda
+ 
 
 
 toast = dbc.Toast(
@@ -65,6 +67,7 @@ input_box = dbc.Card([
             dbc.Col(
                 dbc.Input(
                     placeholder = 'Adicione um ticker',
+                    autoFocus = True,
                     id = 'ticker_input'
                 )
             ),
@@ -114,5 +117,6 @@ layout = html.Div([
     ],
         id = 'ticker_box'
     ),
-    logo
+    logo,
+    menu_ajuda()
 ])

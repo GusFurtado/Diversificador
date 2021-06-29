@@ -61,7 +61,7 @@ Ele foi construído em Python utilizando os seguintes pacote:
 - [DadosAbertosBrasil](https://www.gustavofurtado.com/dab.html) para coleta das taxas de câmbio e SELIC;
 - [yfinance](https://aroussi.com/post/python-yahoo-finance) para coleta de dados da API do [Yahoo! Finance](https://finance.yahoo.com/);
 - [CVXOPT](https://cvxopt.org/) para otimização convexa; 
-- [Dash](https://plotly.com/dash/) para contrução da estrutura HTML e interface do usuário;
+- [Dash](https://plotly.com/dash/) para construção da estrutura HTML e interface do usuário;
 - [Plotly](https://plotly.com/python/) para os gráficos.
 
 ## Como posso contribuir para o projeto?

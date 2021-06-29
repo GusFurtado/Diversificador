@@ -12,6 +12,7 @@ from werkzeug import run_simple
 
 from layouts import tickers
 from layouts import relatorio
+from layouts import ajuda
 import app_config as cfg
 import report
 import utils
@@ -54,6 +55,18 @@ relatorio_app.layout = relatorio.layout
 
 
 
+ajuda_app = dash.Dash(
+    __name__,
+    server = server,
+    url_base_pathname = '/ajuda/',
+    external_stylesheets = external_stylesheets
+)
+
+ajuda_app.title = cfg.NAME
+ajuda_app.layout = ajuda.layout
+
+
+
 @server.route('/')
 def redirect_menu():
     return flask.redirect('/tickers/')
@@ -65,6 +78,10 @@ def render_tickers():
 @server.route('/relatorio/')
 def render_relatorio():
     return flask.redirect('/PyRelatorio')
+
+@server.route('/ajuda/')
+def render_ajuda():
+    return flask.redirect('/PyAjuda')
 
 
 
@@ -224,6 +241,7 @@ def load_corr_timeline(tickers, data):
 app = DispatcherMiddleware(server, {
     '/PyTickers': tickers_app.server,
     '/PyRelatorio': relatorio_app.server,
+    '/PyAjuda': ajuda_app.server
 })
 
 

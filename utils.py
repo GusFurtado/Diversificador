@@ -70,3 +70,23 @@ def tag(ticker:str):
         style = {'padding': 10},
         className = 'shadow'
     )
+
+
+
+def menu_ajuda():
+    return html.A([
+        html.I(
+            className = 'fas fa-question-circle mr-2',
+        ),
+        html.Span(html.B('Ajuda'))
+    ],
+        href = '/ajuda',
+        target = '_blank',
+        style = {
+            'font-size': 20,
+            'color': 'white',
+            'top': 10,
+            'right': 20,
+            'position': 'fixed'
+        }
+    )
