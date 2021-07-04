@@ -118,5 +118,5 @@ layout = html.Div([
         id = 'ticker_box'
     ),
     logo,
-    menu_ajuda()
+    menu_ajuda('fixed')
 ])

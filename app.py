@@ -1,5 +1,3 @@
-from socket import gethostname
-
 import dash
 from dash.dependencies import Output, Input, State, ALL
 from dash.exceptions import PreventUpdate
@@ -161,7 +159,7 @@ def generate_tags(data):
     prevent_initial_call = True)
 def go_to_report(_, data):
     hashs = ''.join([f'#{d}' for d in data])
-    return f'http://{gethostname()}:{cfg.PORT}/relatorio/{hashs}'
+    return f'https://diversificador.herokuapp.com/relatorio/{hashs}'
 
 
 

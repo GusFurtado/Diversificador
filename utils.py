@@ -73,7 +73,7 @@ def tag(ticker:str):
 
 
 
-def menu_ajuda():
+def menu_ajuda(position):
     return html.A([
         html.I(
             className = 'fas fa-question-circle mr-2',
@@ -87,6 +87,6 @@ def menu_ajuda():
             'color': 'white',
             'top': 10,
             'right': 20,
-            'position': 'fixed'
+            'position': position
         }
     )

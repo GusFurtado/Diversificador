@@ -30,7 +30,12 @@ textwall = html.Div([
         html.I(className='fas fa-plus-circle'),
         html.Span(' para adicionar. Mantenha o check "B3" selecionado, caso o título seja negociado na B3 e desmarque caso contrário.')
     ]),
-    html.P(html.Img(src="https://raw.githubusercontent.com/GusFurtado/Diversificador/main/assets/menu.png")),
+    html.P(
+        html.Img(
+            src = "https://raw.githubusercontent.com/GusFurtado/Diversificador/main/assets/menu.png",
+            style = {'maxWidth': '100%'}
+        )
+    ),
     html.P('Assim que todos os tickers forem adicionar, clique no botão "Analisar carteira" para carregar o relatório.'),
     html.Hr(),
     html.H2('Como é feita a otimização do portfólio?'),
@@ -76,17 +81,37 @@ textwall = html.Div([
         ])
     ]),
     html.P('O objetivo da otimização é dar um maior peso a títulos de baixa correlação, onde a variância de um cancela a variância de outro, de forma que a variância geral da carteira seja minimizada.'),
-    html.P(html.Img(src='https://raw.githubusercontent.com/GusFurtado/Diversificador/main/assets/matriz.png')),
+    html.P(
+        html.Img(
+            src = 'https://raw.githubusercontent.com/GusFurtado/Diversificador/main/assets/matriz.png',
+            style = {'maxWidth': '100%'}
+        )
+    ),
     html.P('Ao clicar nas células da tabela, será aberto um gráfico de cotações normalizado que permite visualizar como esses títulos se comportam em relação um ao outro.'),
-    html.P(html.Img(src='https://raw.githubusercontent.com/GusFurtado/Diversificador/main/assets/grafico.png')),
+    html.P(
+        html.Img(
+            src = 'https://raw.githubusercontent.com/GusFurtado/Diversificador/main/assets/grafico.png',
+            style = {'maxWidth': '100%'}
+        )
+    ),
     html.Hr(),
     html.H2('O que é a Fronteira da Eficiência?'),
     html.P('É o conjunto de portfólios que possuem o maior retorno esperado (eixo Y) em função do risco que se está disposto a correr (eixo X).'),
-    html.P(html.Img(src='https://raw.githubusercontent.com/GusFurtado/Diversificador/main/assets/variavel.png')),
+    html.P(
+        html.Img(
+            src = 'https://raw.githubusercontent.com/GusFurtado/Diversificador/main/assets/variavel.png',
+            style = {'maxWidth': '100%'}
+        )
+    ),
     html.Hr(),
     html.H2('O que é a Linha de Alocação de Capital?'),
     html.P('É a linha que representa o retorno esperado em função da proporção de títulos sem risco. A ferramenta utiliza a taxa SELIC atual para o cálculo do retorno livre de risco.'),
-    html.P(html.Img(src='https://raw.githubusercontent.com/GusFurtado/Diversificador/main/assets/fixa.png')),
+    html.P(
+        html.Img(
+            src = 'https://raw.githubusercontent.com/GusFurtado/Diversificador/main/assets/fixa.png',
+            style = {'maxWidth': '100%'}
+        )
+    ),
     html.Hr(),
     html.H2('Que ferramentas foram utilizadas para a construção do Diversificador de Portfólio?'),
     html.P('Ele foi construído em Python utilizando os seguintes pacote:'),

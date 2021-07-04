@@ -167,7 +167,7 @@ layout = html.Div([
     dcc.Store(id='selected_portfolio'),
     corr_timeline_modal,
     jumbotron,
-    utils.menu_ajuda(),
+    utils.menu_ajuda('absolute'),
     dbc.Container([
 
         html.H1('Matriz de Correlação'),
