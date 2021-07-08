@@ -133,15 +133,13 @@ class Markowitz:
                         'background-color': 'black',
                         'color': 'black'
                     }
-                elif td > 0.7:
+                elif td > 0:
                     style = {
-                        'background-color': 'crimson',
-                        'color': 'white'
+                        'background-color': f'hsl(20, 100%, {50*(2-td)}%)',
                     }
-                elif td < 0.1:
+                elif td < 0:
                     style = {
-                        'background-color': 'aqua',
-                        'color': 'black'
+                        'background-color': f'hsl(200, 100%, {50*(2+td)}%)',
                     }
                 else:
                     style = None
@@ -168,7 +166,8 @@ class Markowitz:
                 ]) for i, row in df.iterrows()
             ])
         ],
-            bordered = True
+            bordered = True,
+            style = {'font-size': 12}
         )
 
 
