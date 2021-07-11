@@ -1,15 +1,15 @@
-DadosAbertosBrasil
+DadosAbertosBrasil==0.3.0
 
-dash
-dash_bootstrap_components
+dash==1.20.0
+dash_bootstrap_components==0.12.2
 dash_core_components
 dash_html_components
 flask
 gunicorn
-plotly
+plotly==4.14.3
 werkzeug
 
 cvxopt
 numpy
 pandas
-yfinance
+yfinance==0.1.63
