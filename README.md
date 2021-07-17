@@ -20,6 +20,14 @@ Na página inicial, insira os tickers desejados na caixa e aperte o botão (+) p
 
 Assim que todos os tickers forem adicionar, clique no botão "Analisar carteira" para carregar o relatório.
 
+Alguns dos tickers que podem ser adicionados:
+- **Ações B3:** PETR4, VALE3...
+- **Ações internacionais:** GOOG, AAPL...
+- **Criptomoedas:** BTC-USD, ETH-USD...
+- **ETLs:** BOVA11, IVVB11...
+
+Clique [neste link](https://www.youtube.com/watch?v=9TrF4wLdA3I) para ver um vídeo de uma carteira sendo construída em 1 minuto.
+
 ## Como é feita a otimização do portfólio?
 
 O Diversificador de Portfólio utiliza a [teoria moderna de portfólio](https://en.wikipedia.org/wiki/Modern_portfolio_theory) desenvolvida inicialmente por [Harry Markowitz](https://en.wikipedia.org/wiki/Harry_Markowitz), economista americano laureado com o prêmio Nobel em Economia.
