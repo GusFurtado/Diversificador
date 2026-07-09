@@ -1,0 +1,40 @@
+[build-system]
+requires = ["setuptools>=64", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "portfolio-analyzer"
+version = "0.1.0"
+description = "Markowitz portfolio optimization and analysis library"
+readme = "README.md"
+license = {text = "MIT"}
+authors = [
+    {name = "GusFurtado", email = "gustavofurtado2@gmail.com"},
+]
+requires-python = ">=3.10"
+keywords = ["portfolio", "finance", "optimization", "markowitz", "efficient-frontier"]
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Intended Audience :: Financial and Insurance Industry",
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Topic :: Office/Business :: Financial :: Investment",
+]
+dependencies = [
+    "numpy",
+    "pandas",
+    "scipy",
+    "plotly",
+]
+
+[project.optional-dependencies]
+data = [
+    "yfinance>=0.1.63",
+    "DadosAbertosBrasil>=0.3.0",
+]
+
+[tool.setuptools.packages.find]
+include = ["portfolio_analyzer*"]
