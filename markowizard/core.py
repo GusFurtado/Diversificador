@@ -13,11 +13,11 @@ from scipy.optimize import minimize
 
 logger = logging.getLogger(__name__)
 
-# Portuguese column names for display
-COL_RETURN = "Retorno Esperado"
-COL_RISK = "Risco"
+# English column names for display (region-agnostic)
+COL_RETURN = "Expected Return"
+COL_RISK = "Risk"
 COL_SHARPE = "Sharpe"
-COL_RISK_FREE = "Renda Fixa"
+COL_RISK_FREE = "Risk-Free"
 
 
 def _make_objective(
@@ -52,8 +52,8 @@ class MarkowitzOptimizer:
         The input returns data.
     portfolios : pandas.DataFrame | None
         DataFrame of optimized portfolios along the efficient frontier,
-        containing weights for each asset plus 'Retorno Esperado' (expected
-        return), 'Risco' (risk/std), and 'Sharpe' (Sharpe ratio).
+        containing weights for each asset plus 'Expected Return',
+        'Risk' (std), and 'Sharpe' (Sharpe ratio).
     n_assets : int
         Number of assets in the portfolio.
     """
@@ -81,7 +81,7 @@ class MarkowitzOptimizer:
         -------
         pandas.DataFrame
             Efficient frontier portfolios with columns for each asset weight,
-            'Retorno Esperado', 'Risco', and 'Sharpe'.
+            'Expected Return', 'Risk', and 'Sharpe'.
         """
         returns_array = self.returns.values.T  # shape: (n_assets, n_periods)
         n = self.n_assets
@@ -156,7 +156,7 @@ class MarkowitzOptimizer:
         Parameters
         ----------
         risk_free_rate : float
-            Risk-free rate (e.g., monthly SELIC rate). Should be in decimal
+        Risk-free rate (e.g., monthly rate). Should be in decimal
             form (e.g., 0.005 for 0.5% a.m.).
 
         Returns

@@ -15,18 +15,16 @@ _DEFAULT_MARGIN = {"b": 10, "t": 10}
 
 
 def _build_hover_text(
-    risco: pd.Series,
-    retorno: pd.Series,
+    risk: pd.Series,
+    expected_return: pd.Series,
     sharpe: pd.Series | None = None,
 ) -> list[str]:
     """Build hover text from risk, return, and optional Sharpe columns."""
     if sharpe is None:
-        sharpe = pd.Series([0.0] * len(risco), index=risco.index)
+        sharpe = pd.Series([0.0] * len(risk), index=risk.index)
     return [
-        f"<b>Retorno Esperado:</b> {y:.1%}<br>"
-        f"<b>Risco:</b> ±{x:.1%}<br>"
-        f"<b>Sharpe Ratio:</b> {z:.2f}"
-        for x, y, z in zip(risco, retorno, sharpe, strict=True)
+        f"<b>Expected Return:</b> {y:.1%}<br><b>Risk:</b> ±{x:.1%}<br><b>Sharpe Ratio:</b> {z:.2f}"
+        for x, y, z in zip(risk, expected_return, sharpe, strict=True)
     ]
 
 
@@ -52,7 +50,7 @@ def efficiency_frontier_plot(
     Parameters
     ----------
     portfolios : pd.DataFrame
-        DataFrame with 'Retorno Esperado', 'Risco', and 'Sharpe' columns
+        DataFrame with 'Expected Return', 'Risk', and 'Sharpe' columns
         (as produced by MarkowitzOptimizer).
     highlight_portfolio : int, optional
         Index of the portfolio to highlight (default 0).
@@ -72,7 +70,7 @@ def efficiency_frontier_plot(
         data=go.Scatter(
             x=df[COL_RISK],
             y=df[COL_RETURN],
-            name="Fronteira da Eficiência",
+            name="Efficient Frontier",
             mode="markers",
             marker={
                 "size": marker_size,
@@ -87,11 +85,11 @@ def efficiency_frontier_plot(
             "margin": _DEFAULT_MARGIN,
             "xaxis": {
                 "tickformat": ",.1%",
-                "title": {"text": "Risco (desvio padrão)"},
+                "title": {"text": "Risk (Standard Deviation)"},
             },
             "yaxis": {
                 "tickformat": ",.1%",
-                "title": {"text": "Retorno Esperado (% a.m.)"},
+                "title": {"text": "Expected Return (% p.m.)"},
             },
         },
     )
@@ -102,7 +100,7 @@ def efficiency_frontier_plot(
         fig.add_annotation(
             x=df.loc[max_sharpe, COL_RISK],
             y=df.loc[max_sharpe, COL_RETURN],
-            text="Maior Sharpe Ratio",
+            text="Max Sharpe Ratio",
             showarrow=True,
             arrowhead=1,
             arrowwidth=2,
@@ -124,7 +122,7 @@ def allocation_pie(portfolio: pd.Series) -> Figure:
     portfolio : pd.Series
         A single portfolio row from the efficient frontier DataFrame.
         Non-zero asset weights are displayed; meta columns like
-        'Retorno Esperado', 'Risco', 'Sharpe' are excluded.
+        'Expected Return', 'Risk', 'Sharpe' are excluded.
 
     Returns
     -------
@@ -174,8 +172,8 @@ def capital_allocation_line_plot(
     retornos = [p["expected_return"] for p in cal_points]
 
     text = [
-        f"<b>Proporção de Renda Fixa:</b> {p['p']:.0%}<br>"
-        f"<b>Retorno Esperado:</b> {p['expected_return']:.1%} ± {p['risk']:.1%} a.m."
+        f"<b>Risk-Free Proportion:</b> {p['p']:.0%}<br>"
+        f"<b>Expected Return:</b> {p['expected_return']:.1%} ± {p['risk']:.1%} p.m."
         for p in cal_points
     ]
 
@@ -201,11 +199,11 @@ def capital_allocation_line_plot(
             "xaxis": {
                 "tickformat": ",.0%",
                 "autorange": "reversed",
-                "title": {"text": "Proporção de Renda Fixa"},
+                "title": {"text": "Risk-Free Proportion"},
             },
             "yaxis": {
                 "tickformat": ",.1%",
-                "title": {"text": "Retorno Esperado (% a.m.)"},
+                "title": {"text": "Expected Return (% p.m.)"},
             },
         },
     )

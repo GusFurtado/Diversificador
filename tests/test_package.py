@@ -20,7 +20,7 @@ def synthetic_returns() -> pd.DataFrame:
     """Generate synthetic monthly returns for 3 assets (60 periods)."""
     np.random.seed(42)
     n_periods = 60
-    tickers = ["PETR4.SA", "ITUB4.SA", "IVVB11.SA"]
+    tickers = ["Asset_A", "Asset_B", "Asset_C"]
     returns = pd.DataFrame(
         np.random.randn(n_periods, 3) * 0.05 + [0.01, 0.008, 0.012],
         columns=tickers,
@@ -58,7 +58,7 @@ class TestMarkowitzOptimizer:
         assert portfolios.shape == (100, 5)
 
     def test_optimize_columns(self, portfolios: pd.DataFrame) -> None:
-        expected = ["PETR4.SA", "ITUB4.SA", "IVVB11.SA", COL_RETURN, COL_RISK]
+        expected = ["Asset_A", "Asset_B", "Asset_C", COL_RETURN, COL_RISK]
         assert list(portfolios.columns) == expected
 
     def test_optimize_returns_have_variation(self, portfolios: pd.DataFrame) -> None:
@@ -68,12 +68,12 @@ class TestMarkowitzOptimizer:
         assert portfolios[COL_RISK].min() < portfolios[COL_RISK].max()
 
     def test_optimize_weights_sum_to_one(self, portfolios: pd.DataFrame) -> None:
-        tickers = ["PETR4.SA", "ITUB4.SA", "IVVB11.SA"]
+        tickers = ["Asset_A", "Asset_B", "Asset_C"]
         weight_sums = portfolios[tickers].sum(axis=1)
         assert np.allclose(weight_sums, 1.0)
 
     def test_optimize_weights_non_negative(self, portfolios: pd.DataFrame) -> None:
-        tickers = ["PETR4.SA", "ITUB4.SA", "IVVB11.SA"]
+        tickers = ["Asset_A", "Asset_B", "Asset_C"]
         assert (portfolios[tickers] >= -1e-10).all().all()
 
     def test_compute_sharpe_adds_column(self, optimizer: MarkowitzOptimizer) -> None:
@@ -111,11 +111,11 @@ class TestCapitalAllocator:
         points = allocator.capital_allocation_line(steps=11)
         assert len(points) == 11
 
-    def test_final_allocation_contains_renda_fixa(self, portfolio_slice: pd.Series) -> None:
+    def test_final_allocation_contains_risk_free(self, portfolio_slice: pd.Series) -> None:
         allocator = CapitalAllocator(portfolio_slice, 0.005)
         result = allocator.final_allocation(0.3)
-        assert "Renda Fixa" in result
-        assert result["Renda Fixa"] == 0.3
+        assert "Risk-Free" in result
+        assert result["Risk-Free"] == 0.3
 
     def test_expected_returns(self, portfolio_slice: pd.Series) -> None:
         allocator = CapitalAllocator(portfolio_slice, 0.005)
@@ -150,10 +150,10 @@ class TestVisualization:
 
     def test_correlation_timeline_single(self, synthetic_returns: pd.DataFrame) -> None:
         prices = (1 + synthetic_returns).cumprod() * 100
-        fig = correlation_timeline(prices, "PETR4.SA")
+        fig = correlation_timeline(prices, "Asset_A")
         assert fig is not None
 
     def test_correlation_timeline_multi(self, synthetic_returns: pd.DataFrame) -> None:
         prices = (1 + synthetic_returns).cumprod() * 100
-        fig = correlation_timeline(prices, "PETR4.SA", "ITUB4.SA")
+        fig = correlation_timeline(prices, "Asset_A", "Asset_B")
         assert fig is not None

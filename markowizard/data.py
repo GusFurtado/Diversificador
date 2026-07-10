@@ -51,7 +51,7 @@ def fetch_prices(
     Parameters
     ----------
     tickers : list of str
-        Yahoo Finance ticker symbols (e.g., ['PETR4.SA', 'ITUB4.SA', 'IVVB11.SA']).
+        Yahoo Finance ticker symbols (e.g., ['AAPL', 'MSFT', 'SPY']).
         Each ticker must match ``^[A-Z0-9.-]+$``.
     period : str, optional
         Data period (default '5y'). See yfinance for valid periods.
@@ -69,71 +69,14 @@ def fetch_prices(
     return df["Close"]
 
 
-def fetch_usd_rates(start: str = "2015-01-01") -> pd.DataFrame:
+def compute_monthly_returns(prices: pd.DataFrame) -> pd.DataFrame:
     """
-    Fetch USD/BRL exchange rates from the Brazilian Central Bank via
-    DadosAbertosBrasil.
-
-    Parameters
-    ----------
-    start : str, optional
-        Start date in 'YYYY-MM-DD' format (default '2015-01-01').
-
-    Returns
-    -------
-    pd.DataFrame
-        DataFrame with daily USD/BRL rates, resampled to end-of-month.
-    """
-    try:
-        from DadosAbertosBrasil import bacen  # type: ignore[import-not-found]
-
-        df = bacen.cambio(inicio=start, index=True)
-        monthly = df.resample("ME").last()
-        return monthly
-    except ImportError:
-        raise ImportError(
-            "DadosAbertosBrasil is required for fetching USD rates. "
-            "Install it with: pip install markowizard[data]"
-        ) from None
-
-
-def get_selic() -> float:
-    """
-    Fetch the current monthly SELIC rate (Brazilian risk-free rate).
-
-    Returns
-    -------
-    float
-        Monthly SELIC rate as a decimal (e.g., 0.005 for 0.5% a.m.).
-    """
-    try:
-        from DadosAbertosBrasil import selic  # type: ignore[import-not-found]
-
-        ao_ano = selic(ultimos=1).loc[0, "valor"]
-        monthly = (float(ao_ano) / 100 + 1) ** (1 / 12) - 1
-        return float(monthly)
-    except ImportError:
-        raise ImportError(
-            "DadosAbertosBrasil is required for fetching SELIC rate. "
-            "Install it with: pip install markowizard[data]"
-        ) from None
-
-
-def compute_monthly_returns(
-    prices: pd.DataFrame,
-    usd_rates: pd.DataFrame | None = None,
-) -> pd.DataFrame:
-    """
-    Convert daily close prices to monthly percentage returns, converting
-    foreign assets to BRL if USD rates are provided.
+    Convert daily close prices to monthly percentage returns.
 
     Parameters
     ----------
     prices : pd.DataFrame
         Daily closing prices with DatetimeIndex and tickers as columns.
-    usd_rates : pd.DataFrame or None, optional
-        Monthly USD/BRL rates with a 'USD' column and DatetimeIndex.
-        If provided, tickers not ending in '.SA' will be converted to BRL.
 
     Returns
     -------
@@ -142,17 +85,6 @@ def compute_monthly_returns(
     """
     # Resample prices to end-of-month
     monthly_prices = prices.resample("ME").last()
-
-    # Convert foreign assets to BRL
-    if usd_rates is not None:
-        for col in monthly_prices.columns:
-            if not col.endswith(".SA"):
-                temp = pd.concat(
-                    [monthly_prices[col], usd_rates["USD"]],
-                    axis=1,
-                    join="inner",
-                )
-                monthly_prices[col] = temp[col] * temp["USD"]
 
     # Compute percentage change and drop NaN
     returns: pd.DataFrame = monthly_prices.pct_change().dropna()

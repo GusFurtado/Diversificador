@@ -22,9 +22,9 @@ class CapitalAllocator:
     ----------
     portfolio : pandas.Series or dict-like
         A dictionary or Series representing a single portfolio, containing
-        at least 'Retorno Esperado' (expected return) and 'Risco' (risk/std).
+        at least 'Expected Return' (expected return) and 'Risk' (risk/std).
     risk_free_rate : float
-        Risk-free rate (e.g., monthly SELIC rate).
+        Risk-free rate (e.g., monthly rate).
 
     Attributes
     ----------
@@ -111,7 +111,7 @@ class CapitalAllocator:
         Returns
         -------
         dict[str, float]
-            Mapping of asset names (including 'Renda Fixa' for risk-free) to
+        Mapping of asset names (including 'Risk-Free' for risk-free) to
             their allocation percentages.
         """
         allocation: dict[str, float] = {COL_RISK_FREE: p}

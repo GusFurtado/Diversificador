@@ -2,7 +2,6 @@
 
 A modern Python library for Markowitz portfolio optimization and analysis.
 
-[![CI](https://github.com/GusFurtado/markowizard/actions/workflows/ci.yml/badge.svg)](https://github.com/GusFurtado/markowizard/actions/workflows/ci.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Python 3.10+](https://img.shields.io/badge/python-3.10+-blue.svg)](https://www.python.org/downloads/)
 
@@ -11,7 +10,7 @@ A modern Python library for Markowitz portfolio optimization and analysis.
 - **Markowitz Mean-Variance Optimization** — Compute the efficient frontier using `scipy.optimize`
 - **Capital Allocation Line** — Mix risky portfolios with risk-free assets
 - **Visualization** — Plotly-based charts for efficient frontier, allocation pie, CAL, correlation heatmaps, and price timelines
-- **Data Fetching** — Optional convenience functions for downloading market data via yfinance and Brazilian Central Bank data
+- **Data Fetching** — Optional convenience functions for downloading market data via yfinance
 
 ## Installation
 
@@ -77,7 +76,7 @@ class MarkowitzOptimizer:
     def max_sharpe_portfolio(self) -> pd.Series
 ```
 
-**Constants**: `COL_RETURN = "Retorno Esperado"`, `COL_RISK = "Risco"`, `COL_SHARPE = "Sharpe"`, `COL_RISK_FREE = "Renda Fixa"`
+**Constants**: `COL_RETURN = "Expected Return"`, `COL_RISK = "Risk"`, `COL_SHARPE = "Sharpe"`, `COL_RISK_FREE = "Risk-Free"`
 
 **Parameters**:
 - `returns`: DataFrame where each column is an asset and each row is a time period. Values must be in decimal form (e.g., 0.01 = 1%).
@@ -93,8 +92,8 @@ class MarkowitzOptimizer:
 | Column | Description |
 |---|---|
 | (ticker columns) | Asset weights (sum to 1, all >= 0) |
-| `Retorno Esperado` | Expected portfolio return |
-| `Risco` | Portfolio standard deviation (risk) |
+| `Expected Return` | Expected portfolio return |
+| `Risk` | Portfolio standard deviation (risk) |
 | `Sharpe` | Sharpe ratio (after `compute_sharpe()`) |
 
 ### `markowizard.allocation`
@@ -113,7 +112,7 @@ class CapitalAllocator:
 
 **`capital_allocation_line()`** returns points along the CAL, each with keys `p`, `expected_return`, `risk`, and `label`.
 
-**`final_allocation(p)`** returns asset weights including `Renda Fixa` (risk-free portion).
+**`final_allocation(p)`** returns asset weights including `Risk-Free` (risk-free portion).
 
 ### `markowizard.visualization`
 
@@ -132,9 +131,7 @@ All visualization functions return Plotly `Figure` objects — call `.show()` to
 | Function | Returns | Description |
 |---|---|---|
 | `fetch_prices(tickers, period="5y", auto_adjust=True)` | `pd.DataFrame` | Historical close prices from Yahoo Finance |
-| `fetch_usd_rates(start="2015-01-01")` | `pd.DataFrame` | USD/BRL rates via Brazilian Central Bank |
-| `get_selic()` | `float` | Current monthly SELIC rate |
-| `compute_monthly_returns(prices, usd_rates=None)` | `pd.DataFrame` | Monthly returns with optional BRL conversion |
+| `compute_monthly_returns(prices)` | `pd.DataFrame` | Monthly returns from daily close prices |
 
 ## Modules
 
@@ -143,7 +140,7 @@ All visualization functions return Plotly `Figure` objects — call `.show()` to
 | `core` | `MarkowitzOptimizer` — efficient frontier optimization |
 | `allocation` | `CapitalAllocator` — risk-free asset allocation |
 | `visualization` | Plotly chart functions (efficient frontier, pie, CAL, correlation) |
-| `data` | Optional data fetching (yfinance, SELIC, USD rates) |
+| `data` | Optional data fetching (yfinance) |
 
 ## Development
 
