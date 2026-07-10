@@ -3,7 +3,7 @@ requires = ["setuptools>=64", "wheel"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "portfolio-analyzer"
+name = "markowizard"
 version = "0.1.0"
 description = "Markowitz portfolio optimization and analysis library"
 readme = "README.md"
@@ -24,10 +24,10 @@ classifiers = [
     "Topic :: Office/Business :: Financial :: Investment",
 ]
 dependencies = [
-    "numpy",
-    "pandas",
-    "scipy",
-    "plotly",
+    "numpy>=1.22",
+    "pandas>=1.4",
+    "scipy>=1.8",
+    "plotly>=5.10",
 ]
 
 [project.optional-dependencies]
@@ -35,6 +35,62 @@ data = [
     "yfinance>=0.1.63",
     "DadosAbertosBrasil>=0.3.0",
 ]
+dev = [
+    "pytest>=9.1.1",
+    "pytest-cov>=7.1.0",
+    "ruff>=0.15.20",
+]
 
 [tool.setuptools.packages.find]
-include = ["portfolio_analyzer*"]
+include = ["markowizard*"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+python_files = ["test_*.py"]
+addopts = "-v --tb=short"
+
+[tool.mypy]
+python_version = "3.12"
+strict = true
+warn_unused_configs = true
+warn_redundant_casts = true
+warn_unused_ignores = true
+disallow_any_unimported = true
+no_implicit_reexport = true
+strict_equality = true
+exclude = ["build/", "dist/", ".eggs/"]
+follow_imports = "skip"
+
+[[tool.mypy.overrides]]
+module = [
+    "yfinance",
+    "DadosAbertosBrasil",
+    "DadosAbertosBrasil.bacen",
+    "DadosAbertosBrasil.selic",
+    "plotly",
+    "plotly.graph_objects",
+]
+ignore_missing_imports = true
+
+[tool.ruff]
+target-version = "py310"
+line-length = 100
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "I", "N", "UP", "B", "SIM", "ARG", "C4", "RUF"]
+
+[tool.ruff.lint.per-file-ignores]
+"tests/*" = ["ARG001"]
+
+[tool.coverage.run]
+source = ["markowizard"]
+omit = ["*/tests/*"]
+
+[tool.coverage.report]
+exclude_lines = [
+    "pragma: no cover",
+    "if __name__ == .__main__.:",
+    "raise ImportError",
+    "except ImportError",
+]
+

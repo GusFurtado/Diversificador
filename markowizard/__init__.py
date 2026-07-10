@@ -1,7 +1,21 @@
-from portfolio_analyzer.allocation import CapitalAllocator
-from portfolio_analyzer.core import MarkowitzOptimizer
+"""
+markowizard: Markowitz portfolio optimization and analysis library.
+
+Provides tools for mean-variance optimization, capital allocation,
+visualization, and optional market data fetching.
+"""
+
+from importlib.metadata import PackageNotFoundError, version
+
+from markowizard.allocation import CapitalAllocator
+from markowizard.core import MarkowitzOptimizer
+
+try:
+    __version__ = version("markowizard")
+except PackageNotFoundError:
+    __version__ = "0.1.0"
 
 __all__ = [
-    "MarkowitzOptimizer",
     "CapitalAllocator",
+    "MarkowitzOptimizer",
 ]

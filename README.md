@@ -1,81 +1,154 @@
-# Diversificador de Portfólio
+# MarkoWizard
 
-## O que é o Diversificador de Portfólio?
+A modern Python library for Markowitz portfolio optimization and analysis.
 
-É uma ferramenta que utiliza o histórico de cotações de títulos públicos para identificar a covariância desses títulos e montar uma carteira com a menor variação (risco) possível, dado o retorno desejado.
+[![CI](https://github.com/GusFurtado/markowizard/actions/workflows/ci.yml/badge.svg)](https://github.com/GusFurtado/markowizard/actions/workflows/ci.yml)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![Python 3.10+](https://img.shields.io/badge/python-3.10+-blue.svg)](https://www.python.org/downloads/)
 
-**DISCLAIMER:** Isto não é uma recomendação de investimentos. Esta é uma ferramenta de análises estatísticas baseada em histórico de cotações. Procure um consultor de valores mobiliários registrado para aconselhamentos financeiros.
+## Features
 
-## Como acessar o Diversificador de Portfólio?
+- **Markowitz Mean-Variance Optimization** — Compute the efficient frontier using `scipy.optimize`
+- **Capital Allocation Line** — Mix risky portfolios with risk-free assets
+- **Visualization** — Plotly-based charts for efficient frontier, allocation pie, CAL, correlation heatmaps, and price timelines
+- **Data Fetching** — Optional convenience functions for downloading market data via yfinance and Brazilian Central Bank data
 
-Ele pode ser acessado pelo seguinte endereço:
+## Installation
 
-https://diversificador.herokuapp.com/
+```bash
+# Core package (optimization + visualization)
+pip install markowizard
 
-## Como utilizar o Diversificador de Portfólio?
+# With data fetching support
+pip install markowizard[data]
+```
 
-Na página inicial, insira os tickers desejados na caixa e aperte o botão (+) para adicionar. Mantenha o check "B3" selecionado, caso o título seja negociado na B3 e desmarque caso contrário.
+## Quick Start
 
-<img src="https://raw.githubusercontent.com/GusFurtado/Diversificador/main/assets/menu.png">
+```python
+import pandas as pd
+from markowizard import MarkowitzOptimizer, CapitalAllocator
+from markowizard.visualization import efficiency_frontier_plot
 
-Assim que todos os tickers forem adicionar, clique no botão "Analisar carteira" para carregar o relatório.
+# You provide the returns DataFrame (monthly returns, assets as columns)
+# Returns should be in decimal form (e.g., 0.01 = 1%, not 1.0 = 100%)
+# returns = pd.DataFrame(...)
 
-Alguns dos tickers que podem ser adicionados:
-- **Ações B3:** PETR4, VALE3...
-- **Ações internacionais:** GOOG, AAPL...
-- **Criptomoedas:** BTC-USD, ETH-USD...
-- **ETLs:** BOVA11, IVVB11...
+# Optimize
+optimizer = MarkowitzOptimizer(returns)
+portfolios = optimizer.optimize()
 
-Clique [neste link](https://www.youtube.com/watch?v=9TrF4wLdA3I) para ver um vídeo de uma carteira sendo construída em 1 minuto.
+# Compute Sharpe ratios (provide monthly risk-free rate)
+risk_free_rate = 0.005  # 0.5% per month
+portfolios = optimizer.compute_sharpe(risk_free_rate)
 
-## Como é feita a otimização do portfólio?
+# Plot the efficient frontier
+fig = efficiency_frontier_plot(portfolios, highlight_portfolio=50)
+fig.show()
 
-O Diversificador de Portfólio utiliza a [teoria moderna de portfólio](https://en.wikipedia.org/wiki/Modern_portfolio_theory) desenvolvida inicialmente por [Harry Markowitz](https://en.wikipedia.org/wiki/Harry_Markowitz), economista americano laureado com o prêmio Nobel em Economia.
+# Best portfolio (maximum Sharpe ratio)
+best = optimizer.max_sharpe_portfolio()
+print(best)
 
-O algoritmo utiliza otimização convexa para identificar qual é a combinação de títulos que maximiza o retorno esperado dado a variância (risco) que se está disposto a correr.
+# Capital allocation line
+allocator = CapitalAllocator(best, risk_free_rate)
+cal_points = allocator.capital_allocation_line(steps=21)
+```
 
-## O que é a Matriz de Correlação?
+## API Reference
 
-É a matriz que apresenta a correlação ([coeficiente de Pearson](https://en.wikipedia.org/wiki/Pearson_correlation_coefficient)) entre todos os pares de títulos possíveis.
+### `markowizard` (top-level)
 
-- Valores próximos de **1** significam uma alta correlação positiva. Os títulos caminham juntos, quando um cai o outro costuma cair junto.
-- Valores próximos de **-1** significam uma alta correlação negativa. Quando um cai, o outro sobe e vice-versa.
-- Valores próximos de **0** significam que os títulos não tem correlação. Um é independente do outro.
+| Export | Description |
+|---|---|
+| `MarkowitzOptimizer` | Efficient frontier optimization (from `core`) |
+| `CapitalAllocator` | Risk-free asset allocation (from `allocation`) |
+| `__version__` | Package version string |
 
-O objetivo da otimização é dar um maior peso a títulos de baixa correlação, onde a variância de um cancela a variância de outro, de forma que a variância geral da carteira seja minimizada.
+### `markowizard.core`
 
-<img src="https://raw.githubusercontent.com/GusFurtado/Diversificador/main/assets/matriz.png">
+#### `MarkowitzOptimizer`
 
-Ao clicar nas células da tabela, será aberto um gráfico de cotações normalizado que permite visualizar como esses títulos se comportam em relação um ao outro.
+```python
+class MarkowitzOptimizer:
+    def __init__(self, returns: pd.DataFrame) -> None
+    def optimize(self) -> pd.DataFrame
+    def compute_sharpe(self, risk_free_rate: float) -> pd.DataFrame
+    def max_sharpe_portfolio(self) -> pd.Series
+```
 
-<img src="https://raw.githubusercontent.com/GusFurtado/Diversificador/main/assets/grafico.png">
+**Constants**: `COL_RETURN = "Retorno Esperado"`, `COL_RISK = "Risco"`, `COL_SHARPE = "Sharpe"`, `COL_RISK_FREE = "Renda Fixa"`
 
-## O que é a Fronteira da Eficiência?
+**Parameters**:
+- `returns`: DataFrame where each column is an asset and each row is a time period. Values must be in decimal form (e.g., 0.01 = 1%).
 
-É o conjunto de portfólios que possuem o maior retorno esperado (eixo Y) em função do risco que se está disposto a correr (eixo X).
+**`optimize()`** computes the efficient frontier by solving 100 quadratic programming problems with varying risk-aversion parameters. Uses warm-starting: each iteration's solution seeds the next.
 
-<img src="https://raw.githubusercontent.com/GusFurtado/Diversificador/main/assets/variavel.png">
+**`compute_sharpe(risk_free_rate)`** adds a `Sharpe` column. `risk_free_rate` must match the period of `returns` (e.g., monthly).
 
+**`max_sharpe_portfolio()`** returns the tangency portfolio row.
 
-## O que é a Linha de Alocação de Capital?
+#### `MarkowitzOptimizer.portfolios` DataFrame columns
 
-É a linha que representa o retorno esperado em função da proporção de títulos sem risco. A ferramenta utiliza a taxa SELIC atual para o cálculo do retorno livre de risco.
+| Column | Description |
+|---|---|
+| (ticker columns) | Asset weights (sum to 1, all >= 0) |
+| `Retorno Esperado` | Expected portfolio return |
+| `Risco` | Portfolio standard deviation (risk) |
+| `Sharpe` | Sharpe ratio (after `compute_sharpe()`) |
 
-<img src="https://raw.githubusercontent.com/GusFurtado/Diversificador/main/assets/fixa.png">
+### `markowizard.allocation`
 
-## Que ferramentas foram utilizadas para a construção do Diversificador de Portfólio?
+#### `CapitalAllocator`
 
-Ele foi construído em Python utilizando os seguintes pacote:
-- [DadosAbertosBrasil](https://www.gustavofurtado.com/dab.html) para coleta das taxas de câmbio e SELIC;
-- [yfinance](https://aroussi.com/post/python-yahoo-finance) para coleta de dados da API do [Yahoo! Finance](https://finance.yahoo.com/);
-- [CVXOPT](https://cvxopt.org/) para otimização convexa; 
-- [Dash](https://plotly.com/dash/) para construção da estrutura HTML e interface do usuário;
-- [Plotly](https://plotly.com/python/) para os gráficos.
+```python
+class CapitalAllocator:
+    def __init__(self, portfolio: pd.Series | Mapping, risk_free_rate: float) -> None
+    @staticmethod
+    def weigh_risk_free(value: float, risk_free_value: float, p: float) -> float
+    def capital_allocation_line(self, steps: int = 21) -> list[dict]
+    def final_allocation(self, p: float) -> dict[str, float]
+    def expected_returns(self, p: float) -> tuple[float, float]
+```
 
-## Como posso contribuir para o projeto?
+**`capital_allocation_line()`** returns points along the CAL, each with keys `p`, `expected_return`, `risk`, and `label`.
 
-O código está aberto, então sinta-se a vontade para propor melhorias.
+**`final_allocation(p)`** returns asset weights including `Renda Fixa` (risk-free portion).
 
-Caso queira ajudar a pagar um domínio e um servidor para hospedar esta aplicação, você pode transferir para a seguinte chave PIX:
+### `markowizard.visualization`
 
-**54a9544a-786e-4a29-9421-4a6864dd0cca**
+| Function | Returns | Description |
+|---|---|---|
+| `efficiency_frontier_plot(portfolios, highlight_portfolio=0)` | `Figure` | Scatter plot of expected return vs risk |
+| `allocation_pie(portfolio)` | `Figure` | Pie chart of asset weights |
+| `capital_allocation_line_plot(cal_points, highlight_point=0)` | `Figure` | CAL risk-return trade-off |
+| `correlation_timeline(prices, ticker_a, ticker_b=None)` | `Figure` | Price history (single or normalized dual) |
+| `correlation_heatmap(corr_matrix)` | `Figure` | Correlation matrix heatmap |
+
+All visualization functions return Plotly `Figure` objects — call `.show()` to display.
+
+### `markowizard.data` (optional, requires `[data]` extra)
+
+| Function | Returns | Description |
+|---|---|---|
+| `fetch_prices(tickers, period="5y", auto_adjust=True)` | `pd.DataFrame` | Historical close prices from Yahoo Finance |
+| `fetch_usd_rates(start="2015-01-01")` | `pd.DataFrame` | USD/BRL rates via Brazilian Central Bank |
+| `get_selic()` | `float` | Current monthly SELIC rate |
+| `compute_monthly_returns(prices, usd_rates=None)` | `pd.DataFrame` | Monthly returns with optional BRL conversion |
+
+## Modules
+
+| Module | Description |
+|---|---|
+| `core` | `MarkowitzOptimizer` — efficient frontier optimization |
+| `allocation` | `CapitalAllocator` — risk-free asset allocation |
+| `visualization` | Plotly chart functions (efficient frontier, pie, CAL, correlation) |
+| `data` | Optional data fetching (yfinance, SELIC, USD rates) |
+
+## Development
+
+See [CONTRIBUTING.md](CONTRIBUTING.md) for setup instructions and contribution guidelines.
+
+## License
+
+MIT

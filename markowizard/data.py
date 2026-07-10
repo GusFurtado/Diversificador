@@ -6,8 +6,38 @@ returns DataFrames. Use these functions to quickly download data from
 public sources.
 """
 
+import re
+from typing import Any
+
 import pandas as pd
 import yfinance as yf
+
+# Pattern for validating Yahoo Finance ticker symbols
+_TICKER_PATTERN = re.compile(r"^[A-Z0-9.-]+$", re.IGNORECASE)
+
+
+def _validate_tickers(tickers: list[str]) -> None:
+    """Validate a list of ticker symbols against a safe pattern.
+
+    Parameters
+    ----------
+    tickers : list of str
+        Ticker symbols to validate.
+
+    Raises
+    ------
+    ValueError
+        If any ticker contains characters other than letters, digits,
+        dots, hyphens, or is empty.
+    """
+    for t in tickers:
+        if not t or not isinstance(t, str):
+            raise ValueError(f"Invalid ticker: {t!r}. Tickers must be non-empty strings.")
+        if not _TICKER_PATTERN.match(t):
+            raise ValueError(
+                f"Invalid ticker: {t!r}. Tickers may only contain letters, "
+                f"digits, dots, and hyphens."
+            )
 
 
 def fetch_prices(
@@ -22,6 +52,7 @@ def fetch_prices(
     ----------
     tickers : list of str
         Yahoo Finance ticker symbols (e.g., ['PETR4.SA', 'ITUB4.SA', 'IVVB11.SA']).
+        Each ticker must match ``^[A-Z0-9.-]+$``.
     period : str, optional
         Data period (default '5y'). See yfinance for valid periods.
     auto_adjust : bool, optional
@@ -32,8 +63,9 @@ def fetch_prices(
     pd.DataFrame
         DataFrame of closing prices with DatetimeIndex and tickers as columns.
     """
+    _validate_tickers(tickers)
     t = yf.Tickers(" ".join(tickers))
-    df = t.history(period=period, auto_adjust=auto_adjust, progress=False)
+    df: Any = t.history(period=period, auto_adjust=auto_adjust, progress=False)
     return df["Close"]
 
 
@@ -53,17 +85,16 @@ def fetch_usd_rates(start: str = "2015-01-01") -> pd.DataFrame:
         DataFrame with daily USD/BRL rates, resampled to end-of-month.
     """
     try:
-        from DadosAbertosBrasil import bacen
+        from DadosAbertosBrasil import bacen  # type: ignore[import-not-found]
 
         df = bacen.cambio(inicio=start, index=True)
-        monthly = df.groupby(df.index.strftime("%Y-%m")).last()
-        monthly.index = pd.to_datetime(monthly.index + "-01") + pd.offsets.MonthEnd(1)
+        monthly = df.resample("ME").last()
         return monthly
     except ImportError:
         raise ImportError(
             "DadosAbertosBrasil is required for fetching USD rates. "
-            "Install it with: pip install DadosAbertosBrasil"
-        )
+            "Install it with: pip install markowizard[data]"
+        ) from None
 
 
 def get_selic() -> float:
@@ -76,7 +107,7 @@ def get_selic() -> float:
         Monthly SELIC rate as a decimal (e.g., 0.005 for 0.5% a.m.).
     """
     try:
-        from DadosAbertosBrasil import selic
+        from DadosAbertosBrasil import selic  # type: ignore[import-not-found]
 
         ao_ano = selic(ultimos=1).loc[0, "valor"]
         monthly = (float(ao_ano) / 100 + 1) ** (1 / 12) - 1
@@ -84,8 +115,8 @@ def get_selic() -> float:
     except ImportError:
         raise ImportError(
             "DadosAbertosBrasil is required for fetching SELIC rate. "
-            "Install it with: pip install DadosAbertosBrasil"
-        )
+            "Install it with: pip install markowizard[data]"
+        ) from None
 
 
 def compute_monthly_returns(
@@ -110,10 +141,7 @@ def compute_monthly_returns(
         DataFrame of monthly percentage returns.
     """
     # Resample prices to end-of-month
-    monthly_prices = prices.groupby(prices.index.strftime("%Y-%m")).last()
-    monthly_prices.index = pd.to_datetime(
-        monthly_prices.index + "-01"
-    ) + pd.offsets.MonthEnd(1)
+    monthly_prices = prices.resample("ME").last()
 
     # Convert foreign assets to BRL
     if usd_rates is not None:
@@ -127,5 +155,5 @@ def compute_monthly_returns(
                 monthly_prices[col] = temp[col] * temp["USD"]
 
     # Compute percentage change and drop NaN
-    returns = monthly_prices.pct_change().dropna()
+    returns: pd.DataFrame = monthly_prices.pct_change().dropna()
     return returns

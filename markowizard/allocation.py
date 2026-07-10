@@ -3,6 +3,15 @@ Capital allocation line (CAL) analysis: mixing a risky portfolio with a
 risk-free asset.
 """
 
+from collections.abc import Mapping
+
+import pandas as pd
+
+from markowizard.core import COL_RETURN, COL_RISK, COL_RISK_FREE, COL_SHARPE
+
+# Keys expected in the portfolio dict/series
+_PORTFOLIO_KEYS = {COL_RETURN, COL_RISK, COL_SHARPE}
+
 
 class CapitalAllocator:
     """
@@ -11,7 +20,7 @@ class CapitalAllocator:
 
     Parameters
     ----------
-    portfolio : dict-like
+    portfolio : pandas.Series or dict-like
         A dictionary or Series representing a single portfolio, containing
         at least 'Retorno Esperado' (expected return) and 'Risco' (risk/std).
     risk_free_rate : float
@@ -25,11 +34,16 @@ class CapitalAllocator:
         Risk-free rate.
     """
 
-    def __init__(self, portfolio, risk_free_rate: float):
+    def __init__(
+        self,
+        portfolio: pd.Series | Mapping[str, float],
+        risk_free_rate: float,
+    ) -> None:
         self.portfolio = dict(portfolio)
         self.rf = risk_free_rate
 
-    def weigh_risk_free(self, value: float, risk_free_value: float, p: float) -> float:
+    @staticmethod
+    def weigh_risk_free(value: float, risk_free_value: float, p: float) -> float:
         """
         Combine a risky value with a risk-free value given proportion ``p``
         allocated to the risk-free asset.
@@ -68,13 +82,11 @@ class CapitalAllocator:
             'risk', and 'label'.
         """
         proportions = [i / (steps - 1) for i in range(steps)]
-        points = []
+        points: list[dict] = []
 
         for p in proportions:
-            expected_return = self.weigh_risk_free(
-                self.portfolio["Retorno Esperado"], self.rf, p
-            )
-            risk = self.weigh_risk_free(self.portfolio["Risco"], 0.0, p)
+            expected_return = self.weigh_risk_free(self.portfolio[COL_RETURN], self.rf, p)
+            risk = self.weigh_risk_free(self.portfolio[COL_RISK], 0.0, p)
             points.append(
                 {
                     "p": p,
@@ -102,9 +114,9 @@ class CapitalAllocator:
             Mapping of asset names (including 'Renda Fixa' for risk-free) to
             their allocation percentages.
         """
-        allocation = {"Renda Fixa": p}
+        allocation: dict[str, float] = {COL_RISK_FREE: p}
         for key, value in self.portfolio.items():
-            if key not in ("Retorno Esperado", "Risco", "Sharpe"):
+            if key not in _PORTFOLIO_KEYS:
                 allocation[key] = (1 - p) * value
         return allocation
 
@@ -121,6 +133,6 @@ class CapitalAllocator:
         -------
         tuple of (expected_return, risk)
         """
-        ret = self.weigh_risk_free(self.portfolio["Retorno Esperado"], self.rf, p)
-        ris = self.weigh_risk_free(self.portfolio["Risco"], 0.0, p)
+        ret = self.weigh_risk_free(self.portfolio[COL_RETURN], self.rf, p)
+        ris = self.weigh_risk_free(self.portfolio[COL_RISK], 0.0, p)
         return ret, ris

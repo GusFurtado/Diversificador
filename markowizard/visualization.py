@@ -1,13 +1,45 @@
 """
 Plotly-based visualization functions for portfolio analysis.
 
-Replaces the Dash-bound visualization methods from the original code
-with standalone functions that return Plotly Figure objects.
+Returns standalone Plotly Figure objects (not tied to Dash).
 """
 
 import pandas as pd
 import plotly.graph_objects as go
 from plotly.graph_objects import Figure
+
+from markowizard.core import COL_RETURN, COL_RISK, COL_SHARPE
+
+# Shared default layout margin
+_DEFAULT_MARGIN = {"b": 10, "t": 10}
+
+
+def _build_hover_text(
+    risco: pd.Series,
+    retorno: pd.Series,
+    sharpe: pd.Series | None = None,
+) -> list[str]:
+    """Build hover text from risk, return, and optional Sharpe columns."""
+    if sharpe is None:
+        sharpe = pd.Series([0.0] * len(risco), index=risco.index)
+    return [
+        f"<b>Retorno Esperado:</b> {y:.1%}<br>"
+        f"<b>Risco:</b> ±{x:.1%}<br>"
+        f"<b>Sharpe Ratio:</b> {z:.2f}"
+        for x, y, z in zip(risco, retorno, sharpe, strict=True)
+    ]
+
+
+def _marker_styles(
+    n: int,
+    highlight_idx: int,
+    base_color: str = "cyan",
+    highlight_color: str = "yellow",
+) -> tuple[list[str], list[int]]:
+    """Build marker color and size lists, highlighting one index."""
+    colors = [base_color if i != highlight_idx else highlight_color for i in range(n)]
+    sizes = [8 if i != highlight_idx else 12 for i in range(n)]
+    return colors, sizes
 
 
 def efficiency_frontier_plot(
@@ -31,32 +63,15 @@ def efficiency_frontier_plot(
     """
     df = portfolios
 
-    # Build hover text
-    sharpe_col = (
-        "Sharpe"
-        if "Sharpe" in df.columns
-        else df.get("Sharpe", pd.Series(index=df.index))
-    )
-    text = [
-        f"<b>Retorno Esperado:</b> {y:.1%}<br>"
-        f"<b>Risco:</b> ±{x:.1%}<br>"
-        f"<b>Sharpe Ratio:</b> {z:.2f}"
-        for x, y, z in zip(
-            df["Risco"],
-            df["Retorno Esperado"],
-            df.get("Sharpe", pd.Series([0] * len(df))),
-        )
-    ]
+    sharpe_col = df.get(COL_SHARPE) if COL_SHARPE in df.columns else None
+    text = _build_hover_text(df[COL_RISK], df[COL_RETURN], sharpe_col)
 
-    marker_color = [
-        "yellow" if n == highlight_portfolio else "cyan" for n in range(len(df))
-    ]
-    marker_size = [12 if n == highlight_portfolio else 8 for n in range(len(df))]
+    marker_color, marker_size = _marker_styles(len(df), highlight_portfolio)
 
     fig = go.Figure(
         data=go.Scatter(
-            x=df["Risco"],
-            y=df["Retorno Esperado"],
+            x=df[COL_RISK],
+            y=df[COL_RETURN],
             name="Fronteira da Eficiência",
             mode="markers",
             marker={
@@ -69,7 +84,7 @@ def efficiency_frontier_plot(
             hoverinfo="text",
         ),
         layout={
-            "margin": {"b": 10, "t": 10},
+            "margin": _DEFAULT_MARGIN,
             "xaxis": {
                 "tickformat": ",.1%",
                 "title": {"text": "Risco (desvio padrão)"},
@@ -82,11 +97,11 @@ def efficiency_frontier_plot(
     )
 
     # Annotate max Sharpe portfolio
-    if "Sharpe" in df.columns:
-        max_sharpe = df["Sharpe"].idxmax()
+    if COL_SHARPE in df.columns:
+        max_sharpe = df[COL_SHARPE].idxmax()
         fig.add_annotation(
-            x=df.loc[max_sharpe, "Risco"],
-            y=df.loc[max_sharpe, "Retorno Esperado"],
+            x=df.loc[max_sharpe, COL_RISK],
+            y=df.loc[max_sharpe, COL_RETURN],
             text="Maior Sharpe Ratio",
             showarrow=True,
             arrowhead=1,
@@ -116,11 +131,11 @@ def allocation_pie(portfolio: pd.Series) -> Figure:
     plotly.graph_objects.Figure
     """
     # Filter out metadata columns and near-zero weights
-    ds = portfolio[~portfolio.index.isin(["Retorno Esperado", "Risco", "Sharpe"])]
+    keys_to_exclude = {COL_RETURN, COL_RISK, COL_SHARPE}
+    ds = portfolio[~portfolio.index.isin(keys_to_exclude)]
     ds = ds[ds > 0.0001]
 
     if ds.empty:
-        # Fallback: show a single entry
         ds = pd.Series({"(no allocation)": 1.0})
 
     fig = go.Figure(
@@ -157,7 +172,6 @@ def capital_allocation_line_plot(
     """
     proportions = [p["p"] for p in cal_points]
     retornos = [p["expected_return"] for p in cal_points]
-    riscos = [p["risk"] for p in cal_points]
 
     text = [
         f"<b>Proporção de Renda Fixa:</b> {p['p']:.0%}<br>"
@@ -165,10 +179,7 @@ def capital_allocation_line_plot(
         for p in cal_points
     ]
 
-    marker_color = [
-        "yellow" if n == highlight_point else "cyan" for n in range(len(cal_points))
-    ]
-    marker_size = [12 if n == highlight_point else 8 for n in range(len(cal_points))]
+    marker_color, marker_size = _marker_styles(len(cal_points), highlight_point)
 
     fig = go.Figure(
         data=go.Scatter(
@@ -186,7 +197,7 @@ def capital_allocation_line_plot(
             line={"color": "blue", "width": 3},
         ),
         layout={
-            "margin": {"b": 10, "t": 10},
+            "margin": _DEFAULT_MARGIN,
             "xaxis": {
                 "tickformat": ",.0%",
                 "autorange": "reversed",
@@ -242,7 +253,7 @@ def _plot_single(prices: pd.DataFrame, ticker: str) -> Figure:
             hoverinfo="skip",
         ),
         layout={
-            "margin": {"b": 10, "t": 10},
+            "margin": _DEFAULT_MARGIN,
             "showlegend": False,
         },
     )
@@ -256,15 +267,15 @@ def _plot_multi(prices: pd.DataFrame, ticker_a: str, ticker_b: str) -> Figure:
     fig = go.Figure(
         layout={
             "yaxis": {"visible": False},
-            "margin": {"b": 10, "t": 10},
+            "margin": _DEFAULT_MARGIN,
             "showlegend": False,
         }
     )
 
     for ticker in [ticker_a, ticker_b]:
-        # Min-max normalize
         series = df[ticker]
-        normalized = (series - series.min()) / (series.max() - series.min())
+        min_val, max_val = series.min(), series.max()
+        normalized = (series - min_val) / (max_val - min_val) if max_val > min_val else series * 0
 
         fig.add_trace(
             go.Scatter(
