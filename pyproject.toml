@@ -30,14 +30,13 @@ dependencies = [
     "plotly>=5.10",
 ]
 
-[dependency-groups]
-data = [
-    "yfinance>=1.5.1",
-]
-
 [project.optional-dependencies]
 data = [
     "yfinance>=0.1.63",
+]
+web = [
+    "fastapi>=0.110.0",
+    "uvicorn[standard]>=0.27.0",
 ]
 dev = [
     "pytest>=9.1.1",
@@ -45,8 +44,16 @@ dev = [
     "ruff>=0.15.20",
 ]
 
+[project.urls]
+Homepage = "https://github.com/GusFurtado/Diversificador"
+Repository = "https://github.com/GusFurtado/Diversificador"
+Documentation = "https://github.com/GusFurtado/Diversificador#readme"
+
+[project.scripts]
+markowizard-web = "backend.main:run"
+
 [tool.setuptools.packages.find]
-include = ["markowizard*"]
+include = ["markowizard*", "backend*"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
