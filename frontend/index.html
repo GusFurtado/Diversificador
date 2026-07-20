@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>MarkoWizard — Portfolio Analyzer</title>
+    <link rel="stylesheet" href="style.css" />
+    <script src="https://cdn.plot.ly/plotly-2.35.2.min.js"></script>
+</head>
+
+<body>
+    <div class="container">
+        <header>
+            <h1>MarkoWizard</h1>
+            <p class="subtitle">Markowitz Portfolio Optimization & Analysis</p>
+        </header>
+
+        <section class="form-section">
+            <form id="analyze-form">
+                <div class="form-group">
+                    <label for="tickers">Ticker Symbols</label>
+                    <input type="text" id="tickers" placeholder="e.g. AAPL, MSFT, GOOGL, SPY"
+                        value="AAPL, MSFT, GOOGL, SPY, BND" required />
+                    <span class="hint">Comma-separated Yahoo Finance tickers</span>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="period">Period</label>
+                        <select id="period">
+                            <option value="1y">1 Year</option>
+                            <option value="2y">2 Years</option>
+                            <option value="5y" selected>5 Years</option>
+                            <option value="10y">10 Years</option>
+                            <option value="max">All Available</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="risk-free-rate">Risk-Free Rate (monthly)</label>
+                        <input type="number" id="risk-free-rate" step="0.001" min="0" value="0.005" />
+                        <span class="hint">Decimal form (e.g. 0.005 = 0.5%)</span>
+                    </div>
+                </div>
+
+                <button type="submit" id="analyze-btn">Analyze Portfolio</button>
+            </form>
+        </section>
+
+        <section id="loading" class="loading-section hidden">
+            <div class="spinner"></div>
+            <p>Fetching data and running optimization…</p>
+        </section>
+
+        <section id="results" class="results-section hidden">
+            <div id="error-message" class="error hidden"></div>
+
+            <div id="metrics" class="metrics-grid"></div>
+
+            <div class="chart-grid">
+                <div class="chart-card">
+                    <h2>Efficient Frontier</h2>
+                    <div id="chart-frontier" class="chart-container"></div>
+                </div>
+                <div class="chart-card">
+                    <h2>Optimal Allocation</h2>
+                    <div id="chart-pie" class="chart-container"></div>
+                </div>
+                <div class="chart-card">
+                    <h2>Capital Allocation Line</h2>
+                    <div id="chart-cal" class="chart-container"></div>
+                </div>
+                <div class="chart-card">
+                    <h2>Correlation Heatmap</h2>
+                    <div id="chart-corr" class="chart-container"></div>
+                </div>
+            </div>
+        </section>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+
+</html>
