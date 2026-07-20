@@ -11,6 +11,7 @@ A modern Python library for Markowitz portfolio optimization and analysis.
 - **Capital Allocation Line** — Mix risky portfolios with risk-free assets
 - **Visualization** — Plotly-based charts for efficient frontier, allocation pie, CAL, correlation heatmaps, and price timelines
 - **Data Fetching** — Optional convenience functions for downloading market data via yfinance
+- **Web Application** — FastAPI backend with a dark-themed interactive frontend
 
 ## Installation
 
@@ -20,9 +21,15 @@ pip install markowizard
 
 # With data fetching support
 pip install markowizard[data]
+
+# With web application support
+pip install markowizard[web]
+
+# Everything
+pip install markowizard[data,web]
 ```
 
-## Quick Start
+## Quick Start (Library)
 
 ```python
 import pandas as pd
@@ -53,6 +60,48 @@ print(best)
 allocator = CapitalAllocator(best, risk_free_rate)
 cal_points = allocator.capital_allocation_line(steps=21)
 ```
+
+## Quick Start (Web Application)
+
+### Using Docker (recommended)
+
+```bash
+docker run -p 8000:8000 ghcr.io/gusfurtado/diversificador:latest
+```
+
+Then open [http://localhost:8000](http://localhost:8000) in your browser.
+
+### Running locally
+
+```bash
+# Install with web extras
+pip install markowizard[data,web]
+
+# Run the server
+markowizard-web
+```
+
+Or with uvicorn directly:
+
+```bash
+uvicorn backend.main:app --host 0.0.0.0 --port 8000
+```
+
+Open [http://localhost:8000](http://localhost:8000) — the web app auto-submits with default tickers on load.
+
+### API
+
+The web app exposes a single `POST /api/analyze` endpoint:
+
+```json
+{
+  "tickers": ["AAPL", "MSFT", "GOOGL", "SPY"],
+  "period": "5y",
+  "risk_free_rate": 0.005
+}
+```
+
+Returns efficient frontier data, max Sharpe portfolio details, capital allocation line points, and Plotly charts serialized as JSON.
 
 ## API Reference
 
@@ -141,6 +190,7 @@ All visualization functions return Plotly `Figure` objects — call `.show()` to
 | `allocation` | `CapitalAllocator` — risk-free asset allocation |
 | `visualization` | Plotly chart functions (efficient frontier, pie, CAL, correlation) |
 | `data` | Optional data fetching (yfinance) |
+| `backend` | FastAPI web application (requires `[web]` extra) |
 
 ## Development
 
