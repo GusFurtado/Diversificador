@@ -6,7 +6,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>MarkoWizard — Portfolio Analyzer</title>
     <link rel="stylesheet" href="style.css" />
-    <script src="https://cdn.plot.ly/plotly-2.35.2.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js"></script>
 </head>
 
 <body>
@@ -61,19 +61,27 @@
             <div class="chart-grid">
                 <div class="chart-card">
                     <h2>Efficient Frontier</h2>
-                    <div id="chart-frontier" class="chart-container"></div>
+                    <div class="chart-container">
+                        <canvas id="chart-frontier"></canvas>
+                    </div>
                 </div>
                 <div class="chart-card">
                     <h2>Optimal Allocation</h2>
-                    <div id="chart-pie" class="chart-container"></div>
+                    <div class="chart-container">
+                        <canvas id="chart-pie"></canvas>
+                    </div>
                 </div>
                 <div class="chart-card">
                     <h2>Capital Allocation Line</h2>
-                    <div id="chart-cal" class="chart-container"></div>
+                    <div class="chart-container">
+                        <canvas id="chart-cal"></canvas>
+                    </div>
                 </div>
                 <div class="chart-card">
                     <h2>Correlation Heatmap</h2>
-                    <div id="chart-corr" class="chart-container"></div>
+                    <div class="chart-container">
+                        <canvas id="chart-corr"></canvas>
+                    </div>
                 </div>
             </div>
         </section>

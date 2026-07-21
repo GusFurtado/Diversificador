@@ -263,6 +263,13 @@ header h1 {
 .chart-container {
     width: 100%;
     min-height: 350px;
+    position: relative;
+}
+
+.chart-container canvas {
+    width: 100% !important;
+    height: 100% !important;
+    max-height: 350px;
 }
 
 /* --- Hidden utility --- */
