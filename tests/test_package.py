@@ -6,13 +6,20 @@ import pytest
 
 from markowizard.allocation import CapitalAllocator
 from markowizard.core import COL_RETURN, COL_RISK, COL_SHARPE, MarkowitzOptimizer
-from markowizard.visualization import (
-    allocation_pie,
-    capital_allocation_line_plot,
-    correlation_heatmap,
-    correlation_timeline,
-    efficiency_frontier_plot,
-)
+
+# Visualization tests require the optional plotly dependency
+try:
+    from markowizard.visualization import (
+        allocation_pie,
+        capital_allocation_line_plot,
+        correlation_heatmap,
+        correlation_timeline,
+        efficiency_frontier_plot,
+    )
+
+    _HAS_PLOTLY = True
+except ImportError:
+    _HAS_PLOTLY = False
 
 
 @pytest.fixture
@@ -128,6 +135,7 @@ class TestCapitalAllocator:
 # --- Visualization tests ---
 
 
+@pytest.mark.skipif(not _HAS_PLOTLY, reason="plotly is not installed")
 class TestVisualization:
     def test_efficiency_frontier_plot(self, portfolios: pd.DataFrame) -> None:
         fig = efficiency_frontier_plot(portfolios, highlight_portfolio=50)
