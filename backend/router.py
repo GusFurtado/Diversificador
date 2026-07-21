@@ -4,18 +4,11 @@ import logging
 
 import numpy as np
 import pandas as pd
-import plotly.io as pio
 from fastapi import APIRouter, HTTPException
 
 from markowizard import CapitalAllocator, MarkowitzOptimizer
 from markowizard.core import COL_RETURN, COL_RISK, COL_SHARPE
 from markowizard.data import compute_monthly_returns, fetch_prices
-from markowizard.visualization import (
-    allocation_pie,
-    capital_allocation_line_plot,
-    correlation_heatmap,
-    efficiency_frontier_plot,
-)
 
 from .schemas import (
     AnalyzeRequest,
@@ -37,7 +30,7 @@ async def analyze(request: AnalyzeRequest) -> AnalyzeResponse:
 
     Fetches price data, computes monthly returns, optimizes the portfolio,
     computes the efficient frontier, finds the max Sharpe portfolio, and
-    generates Plotly charts serialized as JSON.
+    returns raw data for chart rendering on the frontend.
     """
     tickers = request.tickers
     period = request.period
@@ -65,12 +58,16 @@ async def analyze(request: AnalyzeRequest) -> AnalyzeResponse:
                 detail="Not enough data to compute returns. Try a longer period.",
             )
 
-        # 3. Optimize
+        # 3. Compute correlation matrix
+        corr_matrix = returns.corr()
+        correlation_matrix: list[list[float]] = corr_matrix.values.tolist()
+
+        # 4. Optimize
         optimizer = MarkowitzOptimizer(returns)
         portfolios = optimizer.optimize()
         optimizer.compute_sharpe(risk_free_rate)
 
-        # 4. Max Sharpe portfolio
+        # 5. Max Sharpe portfolio
         max_sharpe_series = optimizer.max_sharpe_portfolio()
         max_sharpe_weights = {
             k: float(v)
@@ -84,7 +81,7 @@ async def analyze(request: AnalyzeRequest) -> AnalyzeResponse:
             weights=max_sharpe_weights,
         )
 
-        # 5. Capital Allocation Line
+        # 6. Capital Allocation Line
         allocator = CapitalAllocator(max_sharpe_series, risk_free_rate)
         cal_points_raw = allocator.capital_allocation_line(steps=21)
         cal_points = [
@@ -97,7 +94,7 @@ async def analyze(request: AnalyzeRequest) -> AnalyzeResponse:
             for p in cal_points_raw
         ]
 
-        # 6. Build efficient frontier list
+        # 7. Build efficient frontier list
         frontier: list[PortfolioMetrics] = []
         for _, row in portfolios.iterrows():
             weights = {
@@ -112,27 +109,12 @@ async def analyze(request: AnalyzeRequest) -> AnalyzeResponse:
                 )
             )
 
-        # 7. Generate charts as Plotly JSON
-        highlight_idx = int(portfolios[COL_SHARPE].idxmax()) if COL_SHARPE in portfolios else 0
-
-        fig_frontier = efficiency_frontier_plot(portfolios, highlight_portfolio=highlight_idx)
-        fig_pie = allocation_pie(max_sharpe_series)
-        fig_cal = capital_allocation_line_plot(cal_points_raw, highlight_point=10)
-        fig_corr = correlation_heatmap(returns.corr())
-
-        charts = {
-            "efficient_frontier": pio.to_json(fig_frontier),
-            "allocation_pie": pio.to_json(fig_pie),
-            "capital_allocation_line": pio.to_json(fig_cal),
-            "correlation_heatmap": pio.to_json(fig_corr),
-        }
-
         return AnalyzeResponse(
             tickers=tickers,
             efficient_frontier=frontier,
             max_sharpe_portfolio=max_sharpe_portfolio,
             capital_allocation_line=cal_points,
-            charts=charts,
+            correlation_matrix=correlation_matrix,
         )
 
     except HTTPException:

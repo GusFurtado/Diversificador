@@ -49,4 +49,4 @@ class AnalyzeResponse(BaseModel):
     efficient_frontier: list[PortfolioMetrics]
     max_sharpe_portfolio: MaxSharpePortfolio
     capital_allocation_line: list[CapitalAllocationPoint]
-    charts: dict[str, object]
+    correlation_matrix: list[list[float]]
