@@ -70,7 +70,7 @@ cal_points = allocator.capital_allocation_line(steps=21)
 ### Using Docker (recommended)
 
 ```bash
-docker run -p 8000:8000 ghcr.io/gusfurtado/diversificador:latest
+docker run -p 8000:8000 ghcr.io/outliersanalytics/markowizard:latest
 ```
 
 Then open [http://localhost:8000](http://localhost:8000) in your browser.

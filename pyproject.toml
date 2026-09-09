@@ -47,9 +47,9 @@ dev = [
 ]
 
 [project.urls]
-Homepage = "https://github.com/GusFurtado/Diversificador"
-Repository = "https://github.com/GusFurtado/Diversificador"
-Documentation = "https://github.com/GusFurtado/Diversificador#readme"
+Homepage = "https://github.com/OutliersAnalytics/MarkoWizard"
+Repository = "https://github.com/OutliersAnalytics/MarkoWizard"
+Documentation = "https://github.com/OutliersAnalytics/MarkoWizard#readme"
 
 [project.scripts]
 markowizard-web = "backend.main:run"
