@@ -5,6 +5,10 @@ A modern Python library for Markowitz portfolio optimization and analysis.
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Python 3.10+](https://img.shields.io/badge/python-3.10+-blue.svg)](https://www.python.org/downloads/)
 
+> **Previously known as _Diversificador_.** The original portfolio-analysis web app
+> built with [Dash](https://dash.plotly.com/) is no longer maintained, but it is
+> preserved on the [`dash-deprecated`](../../tree/dash-deprecated) branch for reference.
+
 ## Features
 
 - **Markowitz Mean-Variance Optimization** — Compute the efficient frontier using `scipy.optimize`
