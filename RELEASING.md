@@ -1,7 +1,7 @@
 # Releasing
 
-Pushing a `v*` tag triggers `.github/workflows/publish.yml`, which — after CI
-passes — builds and publishes the PyPI package and the GHCR container image.
+Pushing a `v*` tag triggers `.github/workflows/python-publish.yml`, which — after
+CI passes — builds and publishes the PyPI package and the GHCR container image.
 
 ## One-time setup
 
@@ -15,7 +15,7 @@ The workflow publishes with [trusted publishing](https://docs.pypi.org/trusted-p
    - PyPI project name: `markowizard`
    - Owner: `OutliersAnalytics`
    - Repository name: `MarkoWizard`
-   - Workflow name: `publish.yml`
+   - Workflow name: `python-publish.yml`
    - Environment name: `pypi`
 
 ### GitHub environment
