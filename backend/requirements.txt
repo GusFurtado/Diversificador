@@ -1,0 +1,4 @@
+# Runtime dependencies for the web application only.
+# The markowizard library itself is installed separately (see pyproject.toml).
+fastapi>=0.110.0
+uvicorn[standard]>=0.27.0

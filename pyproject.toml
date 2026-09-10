@@ -27,19 +27,11 @@ dependencies = [
     "numpy>=1.22",
     "pandas>=1.4",
     "scipy>=1.8",
-]
-
-[project.optional-dependencies]
-data = [
     "yfinance>=0.1.63",
-]
-viz = [
     "plotly>=5.10",
 ]
-web = [
-    "fastapi>=0.110.0",
-    "uvicorn[standard]>=0.27.0",
-]
+
+[dependency-groups]
 dev = [
     "pytest>=9.1.1",
     "pytest-cov>=7.1.0",
@@ -50,12 +42,10 @@ dev = [
 Homepage = "https://github.com/OutliersAnalytics/MarkoWizard"
 Repository = "https://github.com/OutliersAnalytics/MarkoWizard"
 Documentation = "https://github.com/OutliersAnalytics/MarkoWizard#readme"
-
-[project.scripts]
-markowizard-web = "backend.main:run"
+Issues = "https://github.com/OutliersAnalytics/MarkoWizard/issues"
 
 [tool.setuptools.packages.find]
-include = ["markowizard*", "backend*"]
+include = ["markowizard*"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
