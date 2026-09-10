@@ -2,7 +2,7 @@
 markowizard: Markowitz portfolio optimization and analysis library.
 
 Provides tools for mean-variance optimization, capital allocation,
-visualization, and optional market data fetching.
+visualization, and market data fetching.
 """
 
 from importlib.metadata import PackageNotFoundError, version
