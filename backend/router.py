@@ -22,6 +22,12 @@ logger = logging.getLogger(__name__)
 router = APIRouter()
 
 
+@router.get("/health")
+async def health() -> dict[str, str]:
+    """Liveness probe."""
+    return {"status": "ok"}
+
+
 @router.post("/analyze", response_model=AnalyzeResponse)
 async def analyze(request: AnalyzeRequest) -> AnalyzeResponse:
     """
