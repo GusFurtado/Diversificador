@@ -1,9 +1,16 @@
-# MarkoWizard
+<p align="center">
+  <img src="https://raw.githubusercontent.com/OutliersAnalytics/MarkoWizard/main/assets/banner.png" alt="MarkoWizard" width="640">
+</p>
 
-A modern Python library for Markowitz portfolio optimization and analysis.
+<p align="center">
+  <b>A modern Python library for Markowitz portfolio optimization and analysis.</b>
+</p>
 
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
-[![Python 3.10+](https://img.shields.io/badge/python-3.10+-blue.svg)](https://www.python.org/downloads/)
+<p align="center">
+  <a href="https://pypi.org/project/markowizard/"><img src="https://img.shields.io/pypi/v/markowizard" alt="PyPI"></a>
+  <a href="https://www.python.org/downloads/"><img src="https://img.shields.io/badge/python-3.10+-blue.svg" alt="Python 3.10+"></a>
+  <a href="https://opensource.org/licenses/MIT"><img src="https://img.shields.io/badge/License-MIT-yellow.svg" alt="License: MIT"></a>
+</p>
 
 > **Previously known as _Diversificador_.** The original portfolio-analysis web app
 > built with [Dash](https://dash.plotly.com/) is no longer maintained, but it is
