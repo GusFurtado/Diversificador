@@ -2,6 +2,7 @@
 
 import logging
 import os
+from importlib.metadata import PackageNotFoundError, version
 from pathlib import Path
 
 import uvicorn
@@ -13,6 +14,11 @@ from .router import router
 
 logger = logging.getLogger(__name__)
 
+try:
+    _VERSION = version("markowizard")
+except PackageNotFoundError:  # pragma: no cover
+    _VERSION = "0.0.0"
+
 # Path to the frontend directory (relative to this file)
 FRONTEND_DIR = Path(__file__).resolve().parent.parent / "frontend"
 
@@ -22,7 +28,7 @@ def create_app() -> FastAPI:
     app = FastAPI(
         title="MarkoWizard",
         description="Markowitz portfolio optimization and analysis API",
-        version="0.1.0",
+        version=_VERSION,
     )
 
     # CORS — allow all origins for local development

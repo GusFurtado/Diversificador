@@ -3,7 +3,6 @@
 import logging
 
 import numpy as np
-import pandas as pd
 from fastapi import APIRouter, HTTPException
 
 from markowizard import CapitalAllocator, MarkowitzOptimizer
