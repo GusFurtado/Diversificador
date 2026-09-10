@@ -21,7 +21,7 @@
 - **Markowitz Mean-Variance Optimization** — Compute the efficient frontier using `scipy.optimize`
 - **Capital Allocation Line** — Mix risky portfolios with risk-free assets
 - **Visualization** — Plotly-based charts for efficient frontier, allocation pie, CAL, correlation heatmaps, and price timelines
-- **Data Fetching** — Optional convenience functions for downloading market data via yfinance
+- **Data Fetching** — Built-in helpers for downloading market data via yfinance
 - **Web Application** — FastAPI backend with a dark-themed interactive frontend
 
 ## Installation

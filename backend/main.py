@@ -5,7 +5,6 @@ import os
 from importlib.metadata import PackageNotFoundError, version
 from pathlib import Path
 
-import uvicorn
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
@@ -58,6 +57,8 @@ app = create_app()
 
 def run() -> None:
     """Entry point for the `markowizard-web` console script."""
+    import uvicorn
+
     host = os.environ.get("HOST", "0.0.0.0")
     port = int(os.environ.get("PORT", "8000"))
     uvicorn.run("backend.main:app", host=host, port=port, reload=False)
