@@ -10,9 +10,16 @@ env:
   IMAGE_NAME: ${{ github.repository }}
 
 jobs:
+  ci:
+    uses: ./.github/workflows/ci.yml
+
   pypi:
     name: Publish to PyPI
+    needs: ci
     runs-on: ubuntu-latest
+    environment:
+      name: pypi
+      url: https://pypi.org/p/markowizard
     permissions:
       id-token: write
 
@@ -24,17 +31,18 @@ jobs:
         with:
           python-version: "3.12"
 
-      - name: Install build tools
-        run: pip install build twine
-
       - name: Build package
-        run: python -m build
+        run: |
+          pip install build twine
+          python -m build
+          twine check dist/*
 
       - name: Publish to PyPI
         uses: pypa/gh-action-pypi-publish@release/v1
 
   docker:
     name: Build & push Docker image
+    needs: ci
     runs-on: ubuntu-latest
     permissions:
       contents: read
