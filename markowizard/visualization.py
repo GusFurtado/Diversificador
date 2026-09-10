@@ -1,38 +1,12 @@
 """
 Plotly-based visualization functions for portfolio analysis.
 
-Returns standalone Plotly Figure objects (not tied to Dash).
-
-Note: This module requires ``plotly``, which is an optional dependency.
-Install it with::
-
-    pip install markowizard[viz]
-
-or::
-
-    pip install plotly
+Returns standalone Plotly ``Figure`` objects (not tied to Dash).
 """
 
-import logging
-
 import pandas as pd
-
-logger = logging.getLogger(__name__)
-
-try:
-    import plotly.graph_objects as go
-    from plotly.graph_objects import Figure
-
-    _PLOTLY_AVAILABLE = True
-except ImportError:  # pragma: no cover
-    _PLOTLY_AVAILABLE = False
-    go = None  # type: ignore[assignment]
-
-    class Figure:  # type: ignore[no-redef]
-        """Stub class when Plotly is not installed."""
-
-        pass
-
+import plotly.graph_objects as go
+from plotly.graph_objects import Figure
 
 from markowizard.core import COL_RETURN, COL_RISK, COL_SHARPE
 

@@ -1,9 +1,9 @@
 """
 Convenience functions for fetching market data and computing returns.
 
-This module is optional — the core analytical modules accept pre-computed
-returns DataFrames. Use these functions to quickly download data from
-public sources.
+Use these to quickly download prices from Yahoo Finance. The core
+analytical modules also accept a pre-computed returns DataFrame directly,
+so these helpers are optional in practice.
 """
 
 import re

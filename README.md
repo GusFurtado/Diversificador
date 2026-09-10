@@ -20,29 +20,23 @@ A modern Python library for Markowitz portfolio optimization and analysis.
 ## Installation
 
 ```bash
-# Core package (optimization + visualization)
 pip install markowizard
-
-# With data fetching support
-pip install markowizard[data]
-
-# With web application support
-pip install markowizard[web]
-
-# Everything
-pip install markowizard[data,web]
 ```
+
+That's everything the library needs: optimization (`scipy`), market-data
+fetching (`yfinance`), and visualization (`plotly`). No optional extras.
 
 ## Quick Start (Library)
 
 ```python
-import pandas as pd
 from markowizard import MarkowitzOptimizer, CapitalAllocator
+from markowizard.data import fetch_prices, compute_monthly_returns
 from markowizard.visualization import efficiency_frontier_plot
 
-# You provide the returns DataFrame (monthly returns, assets as columns)
-# Returns should be in decimal form (e.g., 0.01 = 1%, not 1.0 = 100%)
-# returns = pd.DataFrame(...)
+# Fetch prices and compute monthly returns (decimal form, e.g. 0.01 = 1%)...
+prices = fetch_prices(["AAPL", "MSFT", "GOOGL", "SPY"], period="5y")
+returns = compute_monthly_returns(prices)
+# ...or bring your own returns DataFrame (assets as columns).
 
 # Optimize
 optimizer = MarkowitzOptimizer(returns)
@@ -65,37 +59,30 @@ allocator = CapitalAllocator(best, risk_free_rate)
 cal_points = allocator.capital_allocation_line(steps=21)
 ```
 
-## Quick Start (Web Application)
+## Web Application
 
-### Using Docker (recommended)
+An interactive web UI (FastAPI + a dark-themed frontend) lives in `backend/` and
+`frontend/`. It is **not part of the PyPI package** — run it from the container
+image or a clone.
+
+### Using Docker
 
 ```bash
 docker run -p 8000:8000 ghcr.io/outliersanalytics/markowizard:latest
 ```
 
-Then open [http://localhost:8000](http://localhost:8000) in your browser.
-
-### Running locally
+### From a clone
 
 ```bash
-# Install with web extras
-pip install markowizard[data,web]
-
-# Run the server
-markowizard-web
+git clone https://github.com/OutliersAnalytics/MarkoWizard
+cd MarkoWizard
+uv run --with-requirements backend/requirements.txt uvicorn backend.main:app --port 8000
 ```
 
-Or with uvicorn directly:
+Open [http://localhost:8000](http://localhost:8000) — the app auto-submits with
+default tickers on load.
 
-```bash
-uvicorn backend.main:app --host 0.0.0.0 --port 8000
-```
-
-Open [http://localhost:8000](http://localhost:8000) — the web app auto-submits with default tickers on load.
-
-### API
-
-The web app exposes a single `POST /api/analyze` endpoint:
+It exposes a single endpoint, `POST /api/analyze`:
 
 ```json
 {
@@ -105,7 +92,8 @@ The web app exposes a single `POST /api/analyze` endpoint:
 }
 ```
 
-Returns efficient frontier data, max Sharpe portfolio details, capital allocation line points, and Plotly charts serialized as JSON.
+which returns the efficient frontier, max-Sharpe portfolio, capital-allocation-line
+points, and correlation matrix as JSON. The frontend renders the charts.
 
 ## API Reference
 
@@ -179,7 +167,7 @@ class CapitalAllocator:
 
 All visualization functions return Plotly `Figure` objects — call `.show()` to display.
 
-### `markowizard.data` (optional, requires `[data]` extra)
+### `markowizard.data`
 
 | Function | Returns | Description |
 |---|---|---|
@@ -193,8 +181,10 @@ All visualization functions return Plotly `Figure` objects — call `.show()` to
 | `core` | `MarkowitzOptimizer` — efficient frontier optimization |
 | `allocation` | `CapitalAllocator` — risk-free asset allocation |
 | `visualization` | Plotly chart functions (efficient frontier, pie, CAL, correlation) |
-| `data` | Optional data fetching (yfinance) |
-| `backend` | FastAPI web application (requires `[web]` extra) |
+| `data` | Market-data fetching and monthly-return helpers (yfinance) |
+
+The web application (`backend/`, `frontend/`) is kept in the repo but is not
+part of the installable package — see [Web Application](#web-application).
 
 ## Development
 
