@@ -699,3 +699,150 @@ input[type="range"]:hover::-moz-range-thumb {
   font-family: var(--font-heading);
   font-size: 16px;
 }
+
+/* ── Shared "not a <table>" grid rows ────────────────────────────────────
+   Reused by the allocation weights table and (in later PRs) the
+   correlation, per-asset-statistics and saved-runs sections — a header row
+   plus one CSS-grid row per record, each column count/width supplied by the
+   caller via an inline grid-template-columns (they differ per table). */
+
+.mw-table {
+  padding: var(--space-4) 0;
+  overflow-x: auto;
+}
+.mw-table__inner {
+  display: flex;
+  flex-direction: column;
+}
+.mw-grid-row {
+  display: grid;
+  align-items: center;
+  gap: var(--space-3);
+  padding: var(--space-3) var(--space-6);
+  font-size: 14px;
+}
+.mw-grid-row--head {
+  padding: 0 var(--space-6) var(--space-2);
+  font-size: 11px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--color-neutral-500);
+  background:
+    linear-gradient(
+        to right,
+        transparent,
+        var(--color-divider) 48px,
+        var(--color-divider) calc(100% - 48px),
+        transparent
+      )
+      no-repeat bottom / 100% 1px;
+}
+.mw-grid-row--body {
+  background:
+    linear-gradient(
+        to right,
+        transparent,
+        color-mix(in srgb, var(--color-text) 8%, transparent) 48px,
+        color-mix(in srgb, var(--color-text) 8%, transparent) calc(100% - 48px),
+        transparent
+      )
+      no-repeat bottom / 100% 1px;
+}
+.mw-swatch {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-family: var(--font-heading);
+}
+.mw-swatch__dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 2px;
+  display: block;
+  flex: none;
+}
+.mw-bar-track {
+  display: block;
+  height: 6px;
+  border-radius: 3px;
+  background: var(--color-neutral-800);
+  overflow: hidden;
+}
+.mw-bar-fill {
+  display: block;
+  height: 100%;
+  border-radius: 3px;
+}
+.mw-num {
+  font-variant-numeric: tabular-nums;
+}
+
+/* ── Optimal allocation ──────────────────────────────────────────────── */
+
+.mw-alloc-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-4);
+  align-items: flex-start;
+}
+.mw-alloc-donut-card {
+  flex: 1 1 232px;
+  align-items: center;
+  padding: var(--space-6);
+}
+.mw-alloc-donut {
+  position: relative;
+  width: 100%;
+  max-width: 210px;
+  aspect-ratio: 1 / 1;
+}
+.mw-alloc-donut svg {
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+.mw-alloc-donut__overlay {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+  pointer-events: none;
+  text-align: center;
+}
+.mw-alloc-donut__value {
+  font-family: var(--font-heading);
+  font-size: clamp(20px, 2vw, 26px);
+  letter-spacing: -0.02em;
+}
+.mw-alloc-donut__note {
+  font-size: 11.5px;
+  text-align: center;
+}
+.mw-alloc-main {
+  flex: 999 1 460px;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+.mw-cash-card {
+  padding: var(--space-4);
+}
+.mw-cash-card__head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--space-4);
+  flex-wrap: wrap;
+}
+.mw-cash-card__pct {
+  font-family: var(--font-heading);
+  font-size: 15px;
+  color: var(--color-accent-300);
+}
+.mw-cash-card input[type="range"] {
+  width: 100%;
+}
