@@ -1,279 +1,518 @@
-/* MarkoWizard — Frontend Styles */
+/*
+ * MarkoWizard — Outliers Analytics brand theme.
+ *
+ * Token values below are lifted verbatim from the "MarkoWizard Workstation"
+ * design handoff's own :root block, which the handoff calls out as
+ * authoritative ("read that :root block first — it is the whole theme in
+ * one place"). Two things worth knowing if you're touching this file:
+ *
+ * 1. Brand colors come from outliers-design-system, but the *spacing and
+ *    radius scale* below is NOT the outliers-design-system scale (that one
+ *    runs --space-1: 4px, --space-2: 8px, ...). It's the scale the design
+ *    was actually laid out and pixel-measured against (--space-1: 2.8px, a
+ *    component-library scale unrelated to the brand). Swapping in the
+ *    design-system's own spacing values would shift every gap/padding in
+ *    this page and break the pixel-perfect fidelity the handoff asks for.
+ * 2. Brand teal (--color-accent, #2fc7cc) is ~2.2:1 on white — a fine
+ *    stroke/fill color, not a text color. Every accent-colored *text* role
+ *    (kickers, links, primary/ghost buttons, the outline tag, Sharpe
+ *    values) uses --color-accent-300 (#00707f, ~5.5:1) instead. Don't
+ *    "simplify" those to --color-accent — that's the contrast bug the
+ *    handoff specifically calls out.
+ */
+
+:root {
+  --color-bg: #ffffff;
+  --color-surface: #f8fafc;
+  --color-text: #0d1321;
+  --color-accent: #2fc7cc;
+  --color-accent-2: #001d63;
+  --color-divider: #e2e8f0;
+
+  /* Ramps run 100 = deepest -> 900 = lightest. */
+  --color-neutral-100: #0d1321;
+  --color-neutral-200: #1e293b;
+  --color-neutral-300: #334155;
+  --color-neutral-400: #475569;
+  --color-neutral-500: #64748b;
+  --color-neutral-600: #94a3b8;
+  --color-neutral-700: #cbd5e1;
+  --color-neutral-800: #e2e8f0;
+  --color-neutral-900: #f1f5f9;
+
+  --color-accent-100: #00424c;
+  --color-accent-200: #005a67;
+  --color-accent-300: #00707f;
+  --color-accent-400: #0097a8;
+  --color-accent-500: #2fc7cc;
+  --color-accent-600: #5ed5d9;
+  --color-accent-700: #8fe3e6;
+  --color-accent-800: #c2f1f2;
+  --color-accent-900: #e8fafb;
+
+  --color-accent-2-100: #000e30;
+  --color-accent-2-200: #001445;
+  --color-accent-2-300: #001d63;
+  --color-accent-2-400: #0b2f7f;
+  --color-accent-2-500: #2c4d9c;
+  --color-accent-2-600: #5f7cbd;
+  --color-accent-2-700: #94aad6;
+  --color-accent-2-800: #c5d2ea;
+  --color-accent-2-900: #e7edf8;
+
+  --font-heading: "Montserrat", "Inter", system-ui, sans-serif;
+  --font-heading-weight: 600;
+  --font-body: "Montserrat", "Inter", system-ui, sans-serif;
+
+  --shadow-sm: 0 1px 2px rgba(13, 19, 33, 0.08);
+  --shadow-md: 0 8px 24px rgba(13, 19, 33, 0.1);
+  --shadow-lg: 0 16px 40px rgba(13, 19, 33, 0.14);
+
+  /* Component-layer scale (see file header) — not brand tokens. */
+  --space-1: 2.8px;
+  --space-2: 5.6px;
+  --space-3: 8.4px;
+  --space-4: 11.2px;
+  --space-6: 16.8px;
+  --space-8: 22.4px;
+
+  --radius-sm: 4px;
+  --radius-md: 8px;
+  --radius-lg: 14px;
+}
+
+/* ── Reset & typography ─────────────────────────────────────────────── */
 
 *,
 *::before,
 *::after {
-    box-sizing: border-box;
-    margin: 0;
-    padding: 0;
-}
-
-:root {
-    --bg: #0f172a;
-    --surface: #1e293b;
-    --surface-2: #334155;
-    --text: #e2e8f0;
-    --text-muted: #94a3b8;
-    --accent: #38bdf8;
-    --accent-hover: #7dd3fc;
-    --success: #4ade80;
-    --error: #f87171;
-    --border: #475569;
-    --radius: 8px;
-    --shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.3);
+  box-sizing: border-box;
 }
 
 body {
-    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen, Ubuntu, sans-serif;
-    background: var(--bg);
-    color: var(--text);
-    line-height: 1.6;
-    min-height: 100vh;
+  margin: 0;
+  font-family: var(--font-body);
+  font-size: 15px;
+  line-height: 1.55;
+  font-weight: 400;
+  background: var(--color-bg);
+  color: var(--color-text);
 }
 
-.container {
-    max-width: 1200px;
-    margin: 0 auto;
-    padding: 2rem 1.5rem;
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+  font-family: var(--font-heading);
+  font-weight: var(--font-heading-weight);
+  line-height: 1.12;
+  letter-spacing: -0.015em;
+  margin: 0 0 var(--space-2);
 }
 
-/* --- Header --- */
-
-header {
-    text-align: center;
-    margin-bottom: 2rem;
+h1 {
+  font-size: 40px;
+}
+h2 {
+  font-size: 28px;
+}
+h3 {
+  font-size: 22px;
+}
+h4 {
+  font-size: 18px;
+}
+h5 {
+  font-size: 16px;
+}
+h6 {
+  font-size: 13px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
 }
 
-header h1 {
-    font-size: 2.5rem;
-    font-weight: 700;
-    background: linear-gradient(135deg, var(--accent), var(--success));
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    background-clip: text;
+p {
+  margin: 0 0 var(--space-3);
 }
 
-.subtitle {
-    color: var(--text-muted);
-    font-size: 1.1rem;
-    margin-top: 0.25rem;
+a {
+  color: var(--color-accent-300);
+  text-decoration: none;
+  text-underline-offset: 3px;
+}
+a:hover {
+  color: var(--color-accent-200);
 }
 
-/* --- Form --- */
-
-.form-section {
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: var(--radius);
-    padding: 1.5rem;
-    margin-bottom: 1.5rem;
-    box-shadow: var(--shadow);
+img {
+  display: block;
+  max-width: 100%;
 }
 
-.form-group {
-    margin-bottom: 1rem;
+:focus {
+  outline: none;
+}
+:focus-visible {
+  outline: 2px solid var(--color-accent);
+  outline-offset: 2px;
+}
+::selection {
+  background: color-mix(in srgb, var(--color-accent) 30%, transparent);
 }
 
-.form-group label {
-    display: block;
-    font-weight: 600;
-    font-size: 0.9rem;
-    margin-bottom: 0.35rem;
-    color: var(--accent);
+.text-muted {
+  color: var(--color-neutral-500);
 }
 
-.form-group input,
-.form-group select {
-    width: 100%;
-    padding: 0.65rem 0.75rem;
-    background: var(--bg);
-    border: 1px solid var(--border);
-    border-radius: var(--radius);
-    color: var(--text);
-    font-size: 1rem;
-    transition: border-color 0.2s;
+/* Themed range control. Both vendor-prefixed pseudo-elements are required —
+   there's no unprefixed standard yet that reliably restyles the thumb. */
+input[type="range"] {
+  appearance: none;
+  background: transparent;
+  cursor: pointer;
+}
+input[type="range"]::-webkit-slider-runnable-track {
+  height: 6px;
+  border-radius: 3px;
+  background: var(--color-neutral-800);
+}
+input[type="range"]::-moz-range-track {
+  height: 6px;
+  border-radius: 3px;
+  background: var(--color-neutral-800);
+}
+input[type="range"]::-webkit-slider-thumb {
+  appearance: none;
+  width: 16px;
+  height: 16px;
+  margin-top: -5px;
+  border-radius: 50%;
+  background: var(--color-accent);
+  border: 2px solid var(--color-bg);
+  box-shadow: var(--shadow-sm);
+}
+input[type="range"]::-moz-range-thumb {
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: var(--color-accent);
+  border: 2px solid var(--color-bg);
+  box-shadow: var(--shadow-sm);
+}
+input[type="range"]:hover::-webkit-slider-thumb {
+  background: var(--color-accent-400);
+}
+input[type="range"]:hover::-moz-range-thumb {
+  background: var(--color-accent-400);
 }
 
-.form-group input:focus,
-.form-group select:focus {
-    outline: none;
-    border-color: var(--accent);
-    box-shadow: 0 0 0 3px rgba(56, 189, 248, 0.2);
+@keyframes mwspin {
+  to {
+    transform: rotate(360deg);
+  }
 }
 
-.hint {
-    display: block;
-    font-size: 0.8rem;
-    color: var(--text-muted);
-    margin-top: 0.2rem;
+/* ── Components ──────────────────────────────────────────────────────── */
+
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  cursor: pointer;
+  text-decoration: none;
+  font-family: var(--font-heading);
+  font-weight: var(--font-heading-weight);
+  font-size: 14px;
+  line-height: 1.2;
+  color: var(--color-text);
+  background: transparent;
+  border: 1px solid transparent;
+  padding: var(--space-2) calc(var(--space-3) * 1.2);
+  border-radius: var(--radius-md);
+}
+.btn:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+.btn-primary {
+  color: var(--color-accent-300);
+  border-color: var(--color-accent-400);
+}
+.btn-primary:hover {
+  background: color-mix(in srgb, var(--color-accent) 12%, transparent);
+}
+.btn-primary:active {
+  background: color-mix(in srgb, var(--color-accent) 22%, transparent);
+}
+.btn-secondary {
+  border-color: var(--color-divider);
+}
+.btn-secondary:hover {
+  background: color-mix(in srgb, var(--color-text) 7%, transparent);
+}
+.btn-secondary:active {
+  background: color-mix(in srgb, var(--color-text) 14%, transparent);
+}
+.btn-ghost {
+  color: var(--color-accent-300);
+  padding-inline: var(--space-1);
+}
+.btn-ghost:hover {
+  background: color-mix(in srgb, var(--color-accent) 10%, transparent);
+}
+.btn-ghost:active {
+  background: color-mix(in srgb, var(--color-accent) 18%, transparent);
+}
+.btn-block {
+  width: 100%;
+  margin-top: var(--space-2);
 }
 
-.form-row {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 1rem;
+.field > label {
+  display: block;
+  font-size: 12px;
+  margin-bottom: 5px;
+  color: var(--color-neutral-500);
 }
 
-#analyze-btn {
-    width: 100%;
-    padding: 0.8rem;
-    font-size: 1.1rem;
-    font-weight: 700;
-    background: var(--accent);
-    color: #0f172a;
-    border: none;
-    border-radius: var(--radius);
-    cursor: pointer;
-    transition: background 0.2s, transform 0.1s;
-    margin-top: 0.5rem;
+.seg {
+  display: inline-flex;
+  overflow: hidden;
+  border: 1px solid var(--color-divider);
+  border-radius: var(--radius-md);
+}
+.seg-opt {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 7px 12px;
+  font-size: 13px;
+  cursor: pointer;
+}
+.seg-opt input {
+  position: absolute;
+  opacity: 0;
+  width: 0;
+  height: 0;
+  pointer-events: none;
+}
+.seg-opt + .seg-opt {
+  border-left: 1px solid var(--color-divider);
+}
+.seg-opt:has(input:checked) {
+  color: var(--color-accent-300);
+  box-shadow: inset 0 0 0 1px var(--color-accent-400);
+}
+.seg-opt:not(:has(input:checked)):hover {
+  background: color-mix(in srgb, var(--color-text) 7%, transparent);
+}
+.seg-opt:has(input:focus-visible) {
+  outline: 2px solid var(--color-accent);
+  outline-offset: -2px;
 }
 
-#analyze-btn:hover {
-    background: var(--accent-hover);
+.card {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  padding: var(--space-3);
+  border-radius: var(--radius-md);
+  background: var(--color-surface);
+}
+.card-kicker {
+  font-size: 10px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--color-accent-300);
+}
+.card-body {
+  margin: 0;
+  font-size: 13px;
+  opacity: 0.8;
+  flex: 1;
+}
+.elev-sm {
+  box-shadow: var(--shadow-sm);
+}
+.elev-md {
+  box-shadow: var(--shadow-md);
+}
+.elev-lg {
+  box-shadow: var(--shadow-lg);
 }
 
-#analyze-btn:active {
-    transform: scale(0.98);
+.tag {
+  display: inline-flex;
+  align-items: center;
+  font-size: 11px;
+  letter-spacing: 0.02em;
+  padding: 3px 10px;
+  border-radius: calc(var(--radius-md) * 0.75);
+}
+.tag-accent {
+  background: var(--color-accent-800);
+  color: var(--color-accent-100);
+}
+.tag-neutral {
+  background: var(--color-neutral-800);
+  color: var(--color-neutral-100);
+}
+.tag-outline {
+  border: 1px solid var(--color-accent-400);
+  color: var(--color-accent-300);
 }
 
-#analyze-btn:disabled {
-    opacity: 0.6;
-    cursor: not-allowed;
+/* Universe chips: a .tag variant sized for the rail. Unselected reuses the
+   outline-tag role; selected reuses the filled accent-tag role — border
+   color per the handoff ("--color-accent-500 when on, --color-neutral-700
+   when off"). */
+.mw-chip {
+  cursor: pointer;
+  font-family: var(--font-heading);
+  font-weight: 600;
+  font-size: 11.5px;
+  padding: 4px 9px;
+  background: transparent;
+  color: var(--color-accent-300);
+  border: 1px solid var(--color-neutral-700);
+}
+.mw-chip--selected {
+  background: var(--color-accent-800);
+  color: var(--color-accent-100);
+  border-color: var(--color-accent-500);
 }
 
-/* --- Loading --- */
+/* ── Layout shell ────────────────────────────────────────────────────── */
 
-.loading-section {
-    text-align: center;
-    padding: 3rem 0;
+.mw-header {
+  position: sticky;
+  top: 0;
+  z-index: 20;
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: var(--space-3);
+  padding: var(--space-3) var(--space-6);
+  /* The rule fades out over 48px at both ends instead of a hard border —
+     painted as a background layer so the fade composes with --color-bg. */
+  background:
+    linear-gradient(
+        to right,
+        transparent,
+        var(--color-divider) 48px,
+        var(--color-divider) calc(100% - 48px),
+        transparent
+      )
+      no-repeat bottom / 100% 1px,
+    var(--color-bg);
+}
+.mw-header__brand {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  margin-right: auto;
+  text-decoration: none;
+}
+.mw-header__brand img:first-child {
+  height: 26px;
+  width: auto;
+  flex: none;
+}
+.mw-header__brand img:last-child {
+  height: 15px;
+  width: auto;
+}
+.mw-header__divider {
+  width: 1px;
+  height: 18px;
+  background: var(--color-divider);
+  display: block;
+}
+/* Everything after the brand is flex:none so the row wraps cleanly on
+   narrow viewports instead of squeezing its contents. */
+.mw-header > :not(.mw-header__brand) {
+  flex: none;
+  white-space: nowrap;
+}
+.mw-header .tag {
+  max-width: 36ch;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
-.spinner {
-    width: 40px;
-    height: 40px;
-    border: 4px solid var(--surface-2);
-    border-top: 4px solid var(--accent);
-    border-radius: 50%;
-    animation: spin 0.8s linear infinite;
-    margin: 0 auto 1rem;
+.mw-shell {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  gap: var(--space-8);
+  padding: var(--space-8) var(--space-6) 64px;
+  max-width: 1720px;
+  margin: 0 auto;
 }
 
-@keyframes spin {
-    to {
-        transform: rotate(360deg);
-    }
+.mw-rail {
+  flex: 1 1 272px;
+  max-width: 320px;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-6);
+  align-self: flex-start;
+}
+/* Sticky is added by the media query, never overridden by one — an inline
+   `position:sticky` can't be un-set from inside a query, so this has to be
+   the thing that turns it on. Below 1000px the shell wraps to a single
+   column and a sticky rail would float over the report. */
+@media (min-width: 1001px) {
+  .mw-rail {
+    position: sticky;
+    top: 60px;
+  }
 }
 
-/* --- Results --- */
-
-.results-section {
-    margin-top: 1rem;
+.mw-rail-note {
+  flex-direction: row;
+  align-items: flex-start;
+  gap: var(--space-3);
+}
+.mw-rail-note img {
+  width: 56px;
+  height: 56px;
+  object-fit: contain;
+  flex: none;
 }
 
-.error {
-    background: rgba(248, 113, 113, 0.15);
-    border: 1px solid var(--error);
-    color: var(--error);
-    padding: 1rem;
-    border-radius: var(--radius);
-    margin-bottom: 1rem;
-    font-weight: 500;
+.mw-toc {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  padding-left: var(--space-2);
+  border-left: 1px solid var(--color-divider);
+}
+.mw-toc a {
+  font-size: 12.5px;
+  padding: 3px 0;
+  color: var(--color-neutral-400);
+}
+.mw-toc a:hover {
+  color: var(--color-accent-300);
 }
 
-.error.hidden {
-    display: none;
+.mw-report {
+  flex: 999 1 660px;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 64px;
 }
 
-/* --- Metrics Grid --- */
-
-.metrics-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-    gap: 1rem;
-    margin-bottom: 1.5rem;
-}
-
-.metric-card {
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: var(--radius);
-    padding: 1rem;
-    text-align: center;
-    box-shadow: var(--shadow);
-}
-
-.metric-card .metric-label {
-    font-size: 0.8rem;
-    text-transform: uppercase;
-    letter-spacing: 0.05em;
-    color: var(--text-muted);
-    margin-bottom: 0.25rem;
-}
-
-.metric-card .metric-value {
-    font-size: 1.5rem;
-    font-weight: 700;
-}
-
-.metric-card .metric-value.positive {
-    color: var(--success);
-}
-
-.metric-card .metric-value.negative {
-    color: var(--error);
-}
-
-/* --- Charts --- */
-
-.chart-grid {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 1rem;
-}
-
-@media (max-width: 768px) {
-    .form-row {
-        grid-template-columns: 1fr;
-    }
-
-    .chart-grid {
-        grid-template-columns: 1fr;
-    }
-
-    header h1 {
-        font-size: 1.8rem;
-    }
-}
-
-.chart-card {
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: var(--radius);
-    padding: 1rem;
-    box-shadow: var(--shadow);
-}
-
-.chart-card h2 {
-    font-size: 1rem;
-    font-weight: 600;
-    margin-bottom: 0.75rem;
-    color: var(--text-muted);
-}
-
-.chart-container {
-    width: 100%;
-    min-height: 350px;
-    position: relative;
-}
-
-.chart-container canvas {
-    width: 100% !important;
-    height: 100% !important;
-    max-height: 350px;
-}
-
-/* --- Hidden utility --- */
-
-.hidden {
-    display: none !important;
+.mw-placeholder {
+  align-items: center;
+  text-align: center;
+  gap: var(--space-2);
+  padding: var(--space-8);
 }
