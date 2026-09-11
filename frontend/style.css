@@ -531,6 +531,41 @@ input[type="range"]:hover::-moz-range-thumb {
   gap: var(--space-2);
 }
 
+/* Free-text ticker entry — not in the design handoff (its universe was a
+   fixed 10-asset shortlist; this project moved past that on purpose). Kept
+   visually minimal so it reads as part of the same rail card, not a
+   separate control. */
+.mw-add-ticker {
+  display: flex;
+  gap: var(--space-2);
+  margin-top: var(--space-2);
+}
+.mw-add-ticker input[type="text"] {
+  flex: 1;
+  min-width: 0;
+  height: 32px;
+  padding: 0 var(--space-3);
+  font: inherit;
+  font-size: 13px;
+  color: var(--color-text);
+  background: var(--color-bg);
+  border: 1px solid var(--color-divider);
+  border-radius: var(--radius-md);
+}
+.mw-add-ticker input[type="text"]:focus-visible {
+  outline: 2px solid var(--color-accent);
+  outline-offset: 1px;
+}
+.mw-add-ticker .btn {
+  height: 32px;
+  padding-inline: var(--space-3);
+}
+.mw-add-ticker__error {
+  color: var(--color-error);
+  font-size: 11px;
+  margin-top: var(--space-1);
+}
+
 /* ── KPI band ────────────────────────────────────────────────────────── */
 
 .mw-headline {
