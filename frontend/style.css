@@ -79,6 +79,14 @@
   --radius-sm: 4px;
   --radius-md: 8px;
   --radius-lg: 14px;
+
+  /* Semantic (outliers-design-system tokens/colors.json) — only --color-error
+     is used so far (analysis-failed states); the rest are here so later PRs
+     don't have to re-derive them. */
+  --color-success: #22c55e;
+  --color-warning: #f59e0b;
+  --color-error: #ef4444;
+  --color-info: #3b82f6;
 }
 
 /* ── Reset & typography ─────────────────────────────────────────────── */
@@ -515,4 +523,402 @@ input[type="range"]:hover::-moz-range-thumb {
   text-align: center;
   gap: var(--space-2);
   padding: var(--space-8);
+}
+
+.mw-chip-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+}
+
+/* ── KPI band ────────────────────────────────────────────────────────── */
+
+.mw-headline {
+  font-size: clamp(30px, 3.4vw, 40px);
+  margin: 0 0 var(--space-3);
+}
+.mw-lede {
+  max-width: 64ch;
+  font-size: 15px;
+  margin-bottom: var(--space-8);
+}
+.mw-kpi-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(168px, 1fr));
+  gap: var(--space-4);
+}
+.mw-kpi-value {
+  font-family: var(--font-heading);
+  font-weight: 500;
+  font-size: clamp(24px, 2.2vw, 31px);
+  line-height: 1.1;
+  letter-spacing: -0.02em;
+  color: var(--color-text);
+}
+.mw-kpi-value--accent {
+  color: var(--color-accent-300);
+}
+
+/* ── Error state ─────────────────────────────────────────────────────── */
+
+.mw-error {
+  border: 1px solid color-mix(in srgb, var(--color-error) 35%, transparent);
+}
+.mw-error .card-kicker {
+  color: var(--color-error);
+}
+
+/* ── Running overlay ─────────────────────────────────────────────────── */
+
+.mw-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 40;
+  display: grid;
+  place-items: center;
+  background: color-mix(in srgb, var(--color-bg) 82%, transparent);
+}
+/* `.mw-overlay`'s own `display` would otherwise outrank the UA stylesheet's
+   `[hidden]{display:none}` at equal specificity (source order) — pin it
+   explicitly so setting the `hidden` property from JS always wins. */
+.mw-overlay[hidden] {
+  display: none;
+}
+.mw-overlay__card {
+  align-items: center;
+  gap: var(--space-4);
+  padding: var(--space-8);
+  width: min(300px, 86vw);
+}
+.mw-overlay__card img {
+  width: 84px;
+  height: 84px;
+  object-fit: contain;
+}
+.mw-overlay__title {
+  font-family: var(--font-heading);
+  font-size: 14px;
+  text-align: center;
+}
+.mw-overlay__note {
+  font-size: 11.5px;
+  text-align: center;
+}
+.mw-spinner {
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  border: 3px solid var(--color-neutral-800);
+  border-top-color: var(--color-accent-400);
+  animation: mwspin 0.8s linear infinite;
+}
+
+/* ── Section chrome shared by frontier/allocation/correlation/etc ──────── */
+
+.mw-section-lede {
+  max-width: 70ch;
+  font-size: 14px;
+  margin-bottom: var(--space-6);
+}
+
+/* ── Efficient frontier ──────────────────────────────────────────────── */
+
+.mw-frontier-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-4);
+  align-items: stretch;
+}
+.mw-frontier-chart-card {
+  flex: 999 1 560px;
+  min-width: 0;
+  padding: var(--space-4);
+}
+.mw-frontier-plot {
+  position: relative;
+  width: 100%;
+}
+.mw-frontier-svg {
+  width: 100%;
+  height: auto;
+  display: block;
+  touch-action: none;
+  cursor: crosshair;
+}
+.mw-frontier-overlay {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  font-size: 12.5px;
+  color: var(--color-neutral-400);
+  font-variant-numeric: tabular-nums;
+}
+.mw-frontier-overlay span {
+  position: absolute;
+  white-space: nowrap;
+}
+.mw-frontier-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-4);
+  padding-top: var(--space-2);
+}
+.mw-frontier-legend .mw-legend-item {
+  font-size: 11.5px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.mw-frontier-stats {
+  flex: 1 1 276px;
+  min-width: 0;
+  gap: var(--space-4);
+  padding: var(--space-4);
+}
+.mw-frontier-stats__title {
+  font-family: var(--font-heading);
+  font-size: 18px;
+  line-height: 1.25;
+  margin-top: var(--space-1);
+}
+.mw-frontier-stats__rows {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+.mw-frontier-stats__row {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--space-3);
+  background: linear-gradient(to right, var(--color-divider), var(--color-divider)) no-repeat bottom /
+    100% 1px;
+  padding-bottom: var(--space-2);
+}
+.mw-frontier-stats__row-value {
+  font-family: var(--font-heading);
+  font-size: 16px;
+}
+
+/* ── Shared "not a <table>" grid rows ────────────────────────────────────
+   Reused by the allocation weights table and (in later PRs) the
+   correlation, per-asset-statistics and saved-runs sections — a header row
+   plus one CSS-grid row per record, each column count/width supplied by the
+   caller via an inline grid-template-columns (they differ per table). */
+
+.mw-table {
+  padding: var(--space-4) 0;
+  overflow-x: auto;
+}
+.mw-table__inner {
+  display: flex;
+  flex-direction: column;
+}
+.mw-grid-row {
+  display: grid;
+  align-items: center;
+  gap: var(--space-3);
+  padding: var(--space-3) var(--space-6);
+  font-size: 14px;
+}
+.mw-grid-row--head {
+  padding: 0 var(--space-6) var(--space-2);
+  font-size: 11px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--color-neutral-500);
+  background:
+    linear-gradient(
+        to right,
+        transparent,
+        var(--color-divider) 48px,
+        var(--color-divider) calc(100% - 48px),
+        transparent
+      )
+      no-repeat bottom / 100% 1px;
+}
+.mw-grid-row--body {
+  background:
+    linear-gradient(
+        to right,
+        transparent,
+        color-mix(in srgb, var(--color-text) 8%, transparent) 48px,
+        color-mix(in srgb, var(--color-text) 8%, transparent) calc(100% - 48px),
+        transparent
+      )
+      no-repeat bottom / 100% 1px;
+}
+.mw-swatch {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-family: var(--font-heading);
+}
+.mw-swatch__dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 2px;
+  display: block;
+  flex: none;
+}
+.mw-bar-track {
+  display: block;
+  height: 6px;
+  border-radius: 3px;
+  background: var(--color-neutral-800);
+  overflow: hidden;
+}
+.mw-bar-fill {
+  display: block;
+  height: 100%;
+  border-radius: 3px;
+}
+.mw-num {
+  font-variant-numeric: tabular-nums;
+}
+
+/* ── Optimal allocation ──────────────────────────────────────────────── */
+
+.mw-alloc-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-4);
+  align-items: flex-start;
+}
+.mw-alloc-donut-card {
+  flex: 1 1 232px;
+  align-items: center;
+  padding: var(--space-6);
+}
+.mw-alloc-donut {
+  position: relative;
+  width: 100%;
+  max-width: 210px;
+  aspect-ratio: 1 / 1;
+}
+.mw-alloc-donut svg {
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+.mw-alloc-donut__overlay {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+  pointer-events: none;
+  text-align: center;
+}
+.mw-alloc-donut__value {
+  font-family: var(--font-heading);
+  font-size: clamp(20px, 2vw, 26px);
+  letter-spacing: -0.02em;
+}
+.mw-alloc-donut__note {
+  font-size: 11.5px;
+  text-align: center;
+}
+.mw-alloc-main {
+  flex: 999 1 460px;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+.mw-cash-card {
+  padding: var(--space-4);
+}
+.mw-cash-card__head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--space-4);
+  flex-wrap: wrap;
+}
+.mw-cash-card__pct {
+  font-family: var(--font-heading);
+  font-size: 15px;
+  color: var(--color-accent-300);
+}
+.mw-cash-card input[type="range"] {
+  width: 100%;
+}
+
+/* ── Correlation matrix ──────────────────────────────────────────────── */
+
+.mw-corr-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-4);
+  align-items: flex-start;
+}
+.mw-corr-matrix-card {
+  flex: 0 1 auto;
+  min-width: 0;
+  padding: var(--space-6);
+  overflow-x: auto;
+}
+.mw-corr-grid {
+  display: grid;
+  justify-content: start;
+  gap: 3px;
+}
+.mw-corr-legend {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  margin-top: var(--space-4);
+  max-width: 320px;
+}
+.mw-corr-legend__bar {
+  flex: 1;
+  height: 6px;
+  border-radius: 3px;
+  background: linear-gradient(90deg, var(--color-neutral-900), var(--color-accent-600));
+  display: block;
+}
+.mw-corr-callout {
+  flex: 1 1 300px;
+  max-width: 400px;
+  min-width: 0;
+  padding: var(--space-6);
+  gap: var(--space-3);
+}
+.mw-corr-callout__pair {
+  font-family: var(--font-heading);
+  font-size: 20px;
+  line-height: 1.2;
+}
+.mw-corr-callout__value {
+  font-family: var(--font-heading);
+  font-size: 31px;
+  color: var(--color-accent-300);
+  letter-spacing: -0.02em;
+}
+.mw-corr-callout__footer {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  padding-top: var(--space-2);
+  background: linear-gradient(to right, var(--color-divider), var(--color-divider)) no-repeat top / 100% 1px;
+}
+
+/* ── Saved runs ──────────────────────────────────────────────────────── */
+
+.mw-saved-head {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: var(--space-4);
+  flex-wrap: wrap;
+  margin-bottom: var(--space-6);
+}
+
+.mw-disclaimer {
+  font-size: 11.5px;
+  max-width: 76ch;
+  margin: 0;
 }
