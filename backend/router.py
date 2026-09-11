@@ -12,6 +12,7 @@ from markowizard.data import compute_monthly_returns, fetch_prices
 from .schemas import (
     AnalyzeRequest,
     AnalyzeResponse,
+    AssetStatistics,
     CapitalAllocationPoint,
     MaxSharpePortfolio,
     PortfolioMetrics,
@@ -67,6 +68,16 @@ async def analyze(request: AnalyzeRequest) -> AnalyzeResponse:
         corr_matrix = returns.corr()
         correlation_matrix: list[list[float]] = corr_matrix.values.tolist()
 
+        # 3b. Standalone per-asset statistics (independent of any portfolio weighting)
+        asset_statistics = [
+            AssetStatistics(
+                ticker=ticker,
+                expected_return=float(returns[ticker].mean()),
+                volatility=float(returns[ticker].std()),
+            )
+            for ticker in returns.columns
+        ]
+
         # 4. Optimize
         optimizer = MarkowitzOptimizer(returns)
         portfolios = optimizer.optimize()
@@ -99,7 +110,8 @@ async def analyze(request: AnalyzeRequest) -> AnalyzeResponse:
             for p in cal_points_raw
         ]
 
-        # 7. Build efficient frontier list
+        # 7. Build efficient frontier list. MarkowitzOptimizer.optimize() sorts by
+        # risk ascending, so frontier[0] below is the minimum-variance portfolio.
         frontier: list[PortfolioMetrics] = []
         for _, row in portfolios.iterrows():
             weights = {
@@ -118,8 +130,10 @@ async def analyze(request: AnalyzeRequest) -> AnalyzeResponse:
             tickers=tickers,
             efficient_frontier=frontier,
             max_sharpe_portfolio=max_sharpe_portfolio,
+            min_variance_portfolio=frontier[0],
             capital_allocation_line=cal_points,
             correlation_matrix=correlation_matrix,
+            asset_statistics=asset_statistics,
         )
 
     except HTTPException:
