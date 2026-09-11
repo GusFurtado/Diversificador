@@ -18,10 +18,10 @@
             <span class="mw-header__divider"></span>
             <img src="assets/markowizard-wordmark-light.svg" alt="MarkoWizard" />
         </a>
-        <span class="tag tag-neutral">AAPL · MSFT · SPY · BND · GLD</span>
-        <span class="tag tag-outline">5Y monthly</span>
-        <span class="text-muted" style="font-size: 12px">Not run yet</span>
-        <button type="button" class="btn btn-secondary" disabled>Monthly</button>
+        <span class="tag tag-neutral" id="mw-header-universe">AAPL · MSFT · SPY · BND · GLD</span>
+        <span class="tag tag-outline" id="mw-header-period">5Y monthly</span>
+        <span class="text-muted" style="font-size: 12px" id="mw-header-status">Not run yet</span>
+        <button type="button" class="btn btn-secondary" id="mw-units-btn">Monthly</button>
     </header>
 
     <div class="mw-shell">
@@ -29,24 +29,24 @@
 
             <div class="card elev-sm">
                 <h6 style="margin: 0; color: var(--color-accent-300)">Universe</h6>
-                <div style="display: flex; flex-wrap: wrap; gap: var(--space-2)">
-                    <button type="button" class="tag mw-chip mw-chip--selected" title="Apple">AAPL</button>
-                    <button type="button" class="tag mw-chip mw-chip--selected" title="Microsoft">MSFT</button>
-                    <button type="button" class="tag mw-chip" title="Alphabet">GOOGL</button>
-                    <button type="button" class="tag mw-chip" title="Amazon">AMZN</button>
-                    <button type="button" class="tag mw-chip" title="NVIDIA">NVDA</button>
-                    <button type="button" class="tag mw-chip mw-chip--selected" title="S&amp;P 500 ETF">SPY</button>
-                    <button type="button" class="tag mw-chip" title="Nasdaq 100 ETF">QQQ</button>
-                    <button type="button" class="tag mw-chip mw-chip--selected" title="Total Bond ETF">BND</button>
-                    <button type="button" class="tag mw-chip mw-chip--selected" title="Gold ETF">GLD</button>
-                    <button type="button" class="tag mw-chip" title="Real Estate ETF">VNQ</button>
+                <div class="mw-chip-row" id="mw-chips">
+                    <button type="button" class="tag mw-chip mw-chip--selected" data-idx="0" title="Apple">AAPL</button>
+                    <button type="button" class="tag mw-chip mw-chip--selected" data-idx="1" title="Microsoft">MSFT</button>
+                    <button type="button" class="tag mw-chip" data-idx="2" title="Alphabet">GOOGL</button>
+                    <button type="button" class="tag mw-chip" data-idx="3" title="Amazon">AMZN</button>
+                    <button type="button" class="tag mw-chip" data-idx="4" title="NVIDIA">NVDA</button>
+                    <button type="button" class="tag mw-chip mw-chip--selected" data-idx="5" title="S&amp;P 500 ETF">SPY</button>
+                    <button type="button" class="tag mw-chip" data-idx="6" title="Nasdaq 100 ETF">QQQ</button>
+                    <button type="button" class="tag mw-chip mw-chip--selected" data-idx="7" title="Total Bond ETF">BND</button>
+                    <button type="button" class="tag mw-chip mw-chip--selected" data-idx="8" title="Gold ETF">GLD</button>
+                    <button type="button" class="tag mw-chip" data-idx="9" title="Real Estate ETF">VNQ</button>
                 </div>
-                <div class="text-muted" style="font-size: 11px">5 of 10 selected · minimum 2</div>
+                <div class="text-muted" style="font-size: 11px" id="mw-chip-count">5 of 10 selected · minimum 2</div>
             </div>
 
             <div class="card elev-sm">
                 <h6 style="margin: 0; color: var(--color-accent-300)">History window</h6>
-                <div class="seg" style="width: 100%">
+                <div class="seg" style="width: 100%" id="mw-period">
                     <label class="seg-opt" style="flex: 1"><input type="radio" name="mwperiod" value="1y">1Y</label>
                     <label class="seg-opt" style="flex: 1"><input type="radio" name="mwperiod" value="2y">2Y</label>
                     <label class="seg-opt" style="flex: 1"><input type="radio" name="mwperiod" value="5y" checked>5Y</label>
@@ -58,12 +58,12 @@
                     <div style="display: flex; gap: var(--space-2); align-items: center">
                         <input id="mwrf" type="range" min="0" max="80" step="5" value="8"
                             style="flex: 1; min-width: 0; accent-color: var(--color-accent); height: 20px" />
-                        <span style="font-family: var(--font-heading); font-size: 14px; min-width: 58px; text-align: right">0.20%</span>
+                        <span style="font-family: var(--font-heading); font-size: 14px; min-width: 58px; text-align: right" id="mwrf-display">0.20%</span>
                     </div>
                 </div>
             </div>
 
-            <button type="button" class="btn btn-primary btn-block" disabled style="height: 38px">Run analysis</button>
+            <button type="button" class="btn btn-primary btn-block" id="mw-run-btn" data-action="run" style="height: 38px">Run analysis</button>
 
             <nav class="mw-toc" aria-label="Report sections">
                 <a href="#frontier">01 Efficient frontier</a>
@@ -82,15 +82,28 @@
         </aside>
 
         <main id="top" class="mw-report">
+            <div id="mw-kpi-slot"></div>
             <div class="card elev-sm mw-placeholder">
                 <span class="card-kicker">Coming soon</span>
                 <p class="card-body">
-                    The report (efficient frontier, allocation, correlation matrix, per-asset statistics and saved
-                    runs) is being rebuilt section by section — see the implementation plan for the staged PRs ahead.
+                    The rest of the report (efficient frontier, allocation, correlation matrix, per-asset statistics
+                    and saved runs) is being rebuilt section by section — see the implementation plan for the staged
+                    PRs ahead.
                 </p>
             </div>
         </main>
     </div>
+
+    <div id="mw-overlay" class="mw-overlay" hidden>
+        <div class="card elev-lg mw-overlay__card">
+            <img src="assets/images/mascote-analise-de-dados.png" alt="" />
+            <div class="mw-spinner"></div>
+            <div class="mw-overlay__title">Solving 60 quadratic programs</div>
+            <div class="text-muted mw-overlay__note" id="mw-overlay-note"></div>
+        </div>
+    </div>
+
+    <script src="app.js"></script>
 </body>
 
 </html>
