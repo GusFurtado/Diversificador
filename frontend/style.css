@@ -905,3 +905,20 @@ input[type="range"]:hover::-moz-range-thumb {
   padding-top: var(--space-2);
   background: linear-gradient(to right, var(--color-divider), var(--color-divider)) no-repeat top / 100% 1px;
 }
+
+/* ── Saved runs ──────────────────────────────────────────────────────── */
+
+.mw-saved-head {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: var(--space-4);
+  flex-wrap: wrap;
+  margin-bottom: var(--space-6);
+}
+
+.mw-disclaimer {
+  font-size: 11.5px;
+  max-width: 76ch;
+  margin: 0;
+}

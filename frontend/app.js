@@ -1,11 +1,12 @@
 /**
  * MarkoWizard — analytical workstation.
  *
- * Owns the control-rail state (universe, history window, risk-free rate),
- * the KPI band, the efficient-frontier chart, the allocation donut/cash
- * blend/weights table, the correlation matrix, and per-asset statistics.
- * Saved runs lands in a later PR and will read from the same `state`
- * object this file sets up.
+ * Owns the control-rail state (universe, history window, risk-free rate)
+ * and every report section: the KPI band, the efficient-frontier chart, the
+ * allocation donut/cash blend/weights table, the correlation matrix,
+ * per-asset statistics, and saved runs (localStorage-backed — saving was
+ * left undesigned in the handoff; see the comment above the saved-runs
+ * functions below).
  *
  * No framework, no build step — plain DOM, matching the rest of the repo.
  */
@@ -859,6 +860,150 @@ function renderAssetStats() {
   slot.innerHTML = state.result && !state.error ? assetStatsSectionHtml(state.result) : "";
 }
 
+/* ── Saved runs ──────────────────────────────────────────────────────────
+ * Not designed in the handoff — section 05 is fixtures only there ("saving
+ * is not implemented... see Gaps"). Everything below (the save action, the
+ * storage format, load/delete) is this project's own invention, built to
+ * the agreed v1 shape: kept in this browser's localStorage, no server
+ * changes. */
+
+const SAVED_RUNS_KEY = "markowizard.savedRuns";
+
+function loadSavedRuns() {
+  try {
+    const raw = localStorage.getItem(SAVED_RUNS_KEY);
+    const parsed = raw ? JSON.parse(raw) : [];
+    return Array.isArray(parsed) ? parsed : [];
+  } catch {
+    // Storage unavailable (private browsing, disabled, corrupted value) —
+    // degrade to "no saved runs" rather than breaking the report.
+    return [];
+  }
+}
+
+function writeSavedRuns(runs) {
+  try {
+    localStorage.setItem(SAVED_RUNS_KEY, JSON.stringify(runs));
+  } catch {
+    // Save silently doesn't persist (e.g. quota exceeded) — not worth a
+    // user-facing error for a convenience feature with no design spec.
+  }
+}
+
+function saveCurrentRun() {
+  if (!state.result || state.error) return;
+  const p = selectedPortfolio();
+  const periodLabel = state.appliedPeriod === "max" ? "Max" : state.appliedPeriod.toUpperCase();
+  const defaultName = `${state.appliedSel.length} assets · ${periodLabel}`;
+  const name = window.prompt("Name this saved run:", defaultName);
+  if (name === null) return; // cancelled
+
+  const runs = loadSavedRuns();
+  runs.unshift({
+    id: `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
+    name: name.trim() || defaultName,
+    date: new Date().toLocaleString(undefined, {
+      month: "short", day: "numeric", hour: "2-digit", minute: "2-digit",
+    }),
+    sel: [...state.appliedSel],
+    period: state.appliedPeriod,
+    rfIdx: state.appliedRfIdx,
+    // Raw (pre-cash) selected-portfolio figures — cash is transient UI
+    // state, not part of the saved artifact, and resets to 0 on load just
+    // like it does on a fresh run.
+    expectedReturn: p.expected_return,
+    risk: p.risk,
+    sharpe: p.sharpe,
+  });
+  writeSavedRuns(runs);
+  render();
+}
+
+function loadSavedRun(id) {
+  const run = loadSavedRuns().find((r) => r.id === id);
+  if (!run) return;
+  state.sel = [...run.sel];
+  state.period = run.period;
+  state.rfIdx = run.rfIdx;
+  runAnalysis();
+}
+
+function deleteSavedRun(id) {
+  writeSavedRuns(loadSavedRuns().filter((r) => r.id !== id));
+  render();
+}
+
+function savedRunsSectionHtml() {
+  const runs = loadSavedRuns();
+  const canSave = !!state.result && !state.error;
+
+  const header = `
+    <div class="mw-saved-head">
+      <div>
+        <h6 style="color:var(--color-accent-300)">05 · History</h6>
+        <h3 style="margin-bottom:var(--space-2)">Saved runs</h3>
+        <p class="text-muted mw-section-lede" style="margin:0">Kept locally in this browser. Load one to replace
+          the report above.</p>
+      </div>
+      <button type="button" class="btn btn-primary" data-action="save-run" style="flex:none" ${canSave ? "" : "disabled"}>Save this run</button>
+    </div>`;
+
+  if (runs.length === 0) {
+    return `
+      <section id="saved">
+        ${header}
+        <div class="card elev-sm mw-placeholder">
+          <img src="assets/images/mascote-analise-de-dados.png" alt="" style="width:48px;height:48px;object-fit:contain" />
+          <p class="card-body">No saved runs yet — run an analysis, then save it to come back to it later.</p>
+        </div>
+      </section>`;
+  }
+
+  const cols = "minmax(0,1.1fr) minmax(0,1.6fr) 112px 92px 92px 80px 76px";
+  const rows = runs
+    .map((r) => {
+      const universe = r.sel.map((i) => UNIVERSE[i]?.t).filter(Boolean).join(" · ");
+      const windowLabel = (r.period === "max" ? "Max" : r.period.toUpperCase()) + " monthly";
+      return `
+        <div class="mw-grid-row mw-grid-row--body" style="grid-template-columns:${cols}">
+          <span style="display:flex;flex-direction:column">
+            <span style="font-family:var(--font-heading)">${escapeHtml(r.name)}</span>
+            <span class="text-muted" style="font-size:11px">${escapeHtml(r.date)}</span>
+          </span>
+          <span class="text-muted" style="font-size:12.5px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${escapeHtml(universe)}</span>
+          <span class="text-muted" style="font-size:12.5px">${escapeHtml(windowLabel)}</span>
+          <span class="mw-num" style="text-align:right">${pct(toReturn(r.expectedReturn))}</span>
+          <span class="mw-num" style="text-align:right">${pct(toVol(r.risk))}</span>
+          <span class="mw-num" style="text-align:right;color:var(--color-accent-300)">${toSharpe(r.sharpe).toFixed(2)}</span>
+          <span style="text-align:right;display:flex;gap:4px;justify-content:flex-end">
+            <button type="button" class="btn btn-ghost" data-action="load-run" data-run-id="${escapeHtml(r.id)}">Load</button>
+            <button type="button" class="btn btn-ghost" data-action="delete-run" data-run-id="${escapeHtml(r.id)}" title="Delete" aria-label="Delete saved run">✕</button>
+          </span>
+        </div>`;
+    })
+    .join("");
+
+  return `
+    <section id="saved">
+      ${header}
+      <div class="card elev-sm mw-table">
+        <div class="mw-table__inner" style="min-width:700px">
+          <div class="mw-grid-row mw-grid-row--head" style="grid-template-columns:${cols}">
+            <span>Run</span><span>Universe</span><span>Window</span><span style="text-align:right">Return</span><span style="text-align:right">Risk</span><span style="text-align:right">Sharpe</span><span></span>
+          </div>
+          ${rows}
+        </div>
+      </div>
+    </section>`;
+}
+
+// Unlike the other report sections, saved runs isn't gated on state.result:
+// it's a persistent list independent of whether the current run succeeded
+// (and it stays usable — Load included — even after a failed re-run).
+function renderSavedRuns() {
+  document.getElementById("mw-saved-slot").innerHTML = savedRunsSectionHtml();
+}
+
 function renderKpiSlot() {
   const slot = document.getElementById("mw-kpi-slot");
   if (state.error) {
@@ -879,6 +1024,7 @@ function render() {
   renderAllocation();
   renderCorrelation();
   renderAssetStats();
+  renderSavedRuns();
 }
 
 /* ── Event wiring ────────────────────────────────────────────────────── */
@@ -926,6 +1072,11 @@ function init() {
       state.iF = null;
       render();
     }
+    if (e.target.closest('[data-action="save-run"]')) saveCurrentRun();
+    const loadBtn = e.target.closest('[data-action="load-run"]');
+    if (loadBtn) loadSavedRun(loadBtn.dataset.runId);
+    const deleteBtn = e.target.closest('[data-action="delete-run"]');
+    if (deleteBtn) deleteSavedRun(deleteBtn.dataset.runId);
   });
 
   render();
