@@ -2,10 +2,10 @@
  * MarkoWizard — analytical workstation.
  *
  * Owns the control-rail state (universe, history window, risk-free rate),
- * the KPI band, the efficient-frontier chart, and the allocation donut/cash
- * blend/weights table. The rest of the report (correlation, per-asset
- * statistics, saved runs) lands in later PRs and will read from the same
- * `state` object this file sets up.
+ * the KPI band, the efficient-frontier chart, the allocation donut/cash
+ * blend/weights table, the correlation matrix, and per-asset statistics.
+ * Saved runs lands in a later PR and will read from the same `state`
+ * object this file sets up.
  *
  * No framework, no build step — plain DOM, matching the rest of the repo.
  */
@@ -720,6 +720,145 @@ function renderAllocation() {
   updateAllocation();
 }
 
+/* ── Correlation matrix ──────────────────────────────────────────────── */
+
+// Linear RGB interpolation from neutral-900 (0.0) to accent-600 (1.0). Text
+// stays ink-dark at every value — the ramp tops out light enough that a
+// contrast threshold (needed in the mobile design this superseded) isn't
+// needed here.
+const CORR_LOW_RGB = [241, 245, 249];
+const CORR_HIGH_RGB = [94, 213, 217];
+
+function correlationCellColor(v) {
+  const t = Math.max(0, Math.min(1, v));
+  const rgb = CORR_LOW_RGB.map((u, k) => Math.round(u + (CORR_HIGH_RGB[k] - u) * t));
+  return `rgb(${rgb.join(",")})`;
+}
+
+function correlationSectionHtml(result) {
+  const tickers = result.tickers;
+  const corr = result.correlation_matrix;
+
+  const heads = tickers
+    .map((t) => `<span style="text-align:center;font-size:11px;font-family:var(--font-heading);color:var(--color-neutral-400);padding-bottom:2px">${escapeHtml(t)}</span>`)
+    .join("");
+
+  const rows = tickers
+    .map((rowTicker, i) => {
+      const label = `<span style="display:flex;align-items:center;font-size:11.5px;font-family:var(--font-heading);color:var(--color-neutral-300)">${escapeHtml(rowTicker)}</span>`;
+      const cells = tickers
+        .map((_, j) => {
+          const v = corr[i][j];
+          return `<span style="aspect-ratio:1/1;border-radius:var(--radius-sm);display:flex;align-items:center;justify-content:center;font-size:11.5px;font-variant-numeric:tabular-nums;background:${correlationCellColor(v)};color:#0d1321">${v.toFixed(2)}</span>`;
+        })
+        .join("");
+      return label + cells;
+    })
+    .join("");
+
+  // Least/most correlated pair, scanning the upper triangle only (each pair once).
+  let lo = { v: 2, a: 0, b: 0 };
+  let hi = { v: -2, a: 0, b: 0 };
+  for (let i = 0; i < tickers.length; i++) {
+    for (let j = i + 1; j < tickers.length; j++) {
+      const v = corr[i][j];
+      if (v < lo.v) lo = { v, a: i, b: j };
+      if (v > hi.v) hi = { v, a: i, b: j };
+    }
+  }
+
+  const matrixMin = 58 + tickers.length * 41;
+  const periodWords = state.appliedPeriod === "max" ? "all available history" : state.appliedPeriod.replace("y", " years");
+
+  return `
+    <section id="correlation">
+      <h6 style="color:var(--color-accent-300)">03 · Diversification</h6>
+      <h3 style="margin-bottom:var(--space-2)">Correlation matrix</h3>
+      <p class="text-muted mw-section-lede">Pairwise correlation of monthly returns over ${escapeHtml(periodWords)}.
+        Low pairs are what let the optimizer cut risk without giving up return.</p>
+
+      <div class="mw-corr-row">
+        <div class="card elev-sm mw-corr-matrix-card">
+          <div class="mw-corr-grid" style="grid-template-columns:58px repeat(${tickers.length},minmax(38px,54px));min-width:${matrixMin}px">
+            <span></span>
+            ${heads}
+            ${rows}
+          </div>
+          <div class="mw-corr-legend">
+            <span class="text-muted" style="font-size:11px">0.0</span>
+            <span class="mw-corr-legend__bar"></span>
+            <span class="text-muted" style="font-size:11px">1.0</span>
+          </div>
+        </div>
+
+        <div class="card elev-sm mw-corr-callout">
+          <span class="card-kicker">Least correlated pair</span>
+          <div class="mw-corr-callout__pair">${escapeHtml(tickers[lo.a])} · ${escapeHtml(tickers[lo.b])}</div>
+          <div class="mw-corr-callout__value">${lo.v.toFixed(2)}</div>
+          <p class="card-body">Two assets that rarely move together reduce portfolio variance without reducing
+            expected return, which is why the optimizer holds both even when one has the weaker standalone record.</p>
+          <div class="mw-corr-callout__footer">
+            <span class="text-muted" style="font-size:12px">Most correlated</span>
+            <span style="font-family:var(--font-heading);font-size:13px">${escapeHtml(tickers[hi.a])} · ${escapeHtml(tickers[hi.b])} · ${hi.v.toFixed(2)}</span>
+          </div>
+        </div>
+      </div>
+    </section>`;
+}
+
+function renderCorrelation() {
+  const slot = document.getElementById("mw-correlation-slot");
+  slot.innerHTML = state.result && !state.error ? correlationSectionHtml(state.result) : "";
+}
+
+/* ── Per-asset statistics ────────────────────────────────────────────── */
+
+function assetStatsSectionHtml(result) {
+  const p = selectedPortfolio();
+  const rf = rfOf(state.appliedRfIdx);
+  const statsByTicker = Object.fromEntries((result.asset_statistics || []).map((a) => [a.ticker, a]));
+  const cols = "104px minmax(0,1fr) 124px 104px 136px 96px";
+
+  const rows = result.tickers
+    .map((t, k) => {
+      const a = statsByTicker[t];
+      const w = p.weights[t] ?? 0;
+      const standaloneSharpe = (a.expected_return - rf) / a.volatility;
+      const wColor = w > 0.005 ? "var(--color-text)" : "var(--color-neutral-600)";
+      return `
+        <div class="mw-grid-row mw-grid-row--body" style="grid-template-columns:${cols}">
+          <span class="mw-swatch"><span class="mw-swatch__dot" style="background:${CHART_PALETTE[k % CHART_PALETTE.length]}"></span>${escapeHtml(t)}</span>
+          <span class="text-muted" style="font-size:13px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${escapeHtml(nameFor(t))}</span>
+          <span class="mw-num" style="text-align:right">${pct(toReturn(a.expected_return))}</span>
+          <span class="mw-num" style="text-align:right">${pct(toVol(a.volatility))}</span>
+          <span class="mw-num" style="text-align:right;color:var(--color-neutral-400)">${toSharpe(standaloneSharpe).toFixed(2)}</span>
+          <span class="mw-num" style="text-align:right;color:${wColor}">${pct(w, 1)}</span>
+        </div>`;
+    })
+    .join("");
+
+  return `
+    <section id="assets">
+      <h6 style="color:var(--color-accent-300)">04 · Inputs</h6>
+      <h3 style="margin-bottom:var(--space-2)">Per-asset statistics</h3>
+      <p class="text-muted mw-section-lede">What the optimizer was given. A high standalone Sharpe does not guarantee
+        a large weight — covariance decides.</p>
+      <div class="card elev-sm mw-table">
+        <div class="mw-table__inner" style="min-width:620px">
+          <div class="mw-grid-row mw-grid-row--head" style="grid-template-columns:${cols}">
+            <span>Asset</span><span>Name</span><span style="text-align:right">Expected return</span><span style="text-align:right">Volatility</span><span style="text-align:right">Sharpe, standalone</span><span style="text-align:right">Weight</span>
+          </div>
+          ${rows}
+        </div>
+      </div>
+    </section>`;
+}
+
+function renderAssetStats() {
+  const slot = document.getElementById("mw-assets-slot");
+  slot.innerHTML = state.result && !state.error ? assetStatsSectionHtml(state.result) : "";
+}
+
 function renderKpiSlot() {
   const slot = document.getElementById("mw-kpi-slot");
   if (state.error) {
@@ -738,6 +877,8 @@ function render() {
   renderKpiSlot();
   renderFrontier();
   renderAllocation();
+  renderCorrelation();
+  renderAssetStats();
 }
 
 /* ── Event wiring ────────────────────────────────────────────────────── */

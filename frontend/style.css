@@ -846,3 +846,62 @@ input[type="range"]:hover::-moz-range-thumb {
 .mw-cash-card input[type="range"] {
   width: 100%;
 }
+
+/* ── Correlation matrix ──────────────────────────────────────────────── */
+
+.mw-corr-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-4);
+  align-items: flex-start;
+}
+.mw-corr-matrix-card {
+  flex: 0 1 auto;
+  min-width: 0;
+  padding: var(--space-6);
+  overflow-x: auto;
+}
+.mw-corr-grid {
+  display: grid;
+  justify-content: start;
+  gap: 3px;
+}
+.mw-corr-legend {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  margin-top: var(--space-4);
+  max-width: 320px;
+}
+.mw-corr-legend__bar {
+  flex: 1;
+  height: 6px;
+  border-radius: 3px;
+  background: linear-gradient(90deg, var(--color-neutral-900), var(--color-accent-600));
+  display: block;
+}
+.mw-corr-callout {
+  flex: 1 1 300px;
+  max-width: 400px;
+  min-width: 0;
+  padding: var(--space-6);
+  gap: var(--space-3);
+}
+.mw-corr-callout__pair {
+  font-family: var(--font-heading);
+  font-size: 20px;
+  line-height: 1.2;
+}
+.mw-corr-callout__value {
+  font-family: var(--font-heading);
+  font-size: 31px;
+  color: var(--color-accent-300);
+  letter-spacing: -0.02em;
+}
+.mw-corr-callout__footer {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  padding-top: var(--space-2);
+  background: linear-gradient(to right, var(--color-divider), var(--color-divider)) no-repeat top / 100% 1px;
+}
