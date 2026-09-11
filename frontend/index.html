@@ -4,90 +4,93 @@
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>MarkoWizard — Portfolio Analyzer</title>
+    <title>MarkoWizard — Analytical Workstation</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600&display=swap" rel="stylesheet" />
     <link rel="stylesheet" href="style.css" />
-    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js"></script>
 </head>
 
 <body>
-    <div class="container">
-        <header>
-            <h1>MarkoWizard</h1>
-            <p class="subtitle">Markowitz Portfolio Optimization & Analysis</p>
-        </header>
+    <header class="mw-header">
+        <a href="#top" class="mw-header__brand">
+            <img src="assets/images/outliers-mark.png" alt="Outliers Analytics" />
+            <span class="mw-header__divider"></span>
+            <img src="assets/markowizard-wordmark-light.svg" alt="MarkoWizard" />
+        </a>
+        <span class="tag tag-neutral">AAPL · MSFT · SPY · BND · GLD</span>
+        <span class="tag tag-outline">5Y monthly</span>
+        <span class="text-muted" style="font-size: 12px">Not run yet</span>
+        <button type="button" class="btn btn-secondary" disabled>Monthly</button>
+    </header>
 
-        <section class="form-section">
-            <form id="analyze-form">
-                <div class="form-group">
-                    <label for="tickers">Ticker Symbols</label>
-                    <input type="text" id="tickers" placeholder="e.g. AAPL, MSFT, GOOGL, SPY"
-                        value="AAPL, MSFT, GOOGL, SPY, BND" required />
-                    <span class="hint">Comma-separated Yahoo Finance tickers</span>
+    <div class="mw-shell">
+        <aside class="mw-rail" aria-label="Portfolio controls">
+
+            <div class="card elev-sm">
+                <h6 style="margin: 0; color: var(--color-accent-300)">Universe</h6>
+                <div style="display: flex; flex-wrap: wrap; gap: var(--space-2)">
+                    <button type="button" class="tag mw-chip mw-chip--selected" title="Apple">AAPL</button>
+                    <button type="button" class="tag mw-chip mw-chip--selected" title="Microsoft">MSFT</button>
+                    <button type="button" class="tag mw-chip" title="Alphabet">GOOGL</button>
+                    <button type="button" class="tag mw-chip" title="Amazon">AMZN</button>
+                    <button type="button" class="tag mw-chip" title="NVIDIA">NVDA</button>
+                    <button type="button" class="tag mw-chip mw-chip--selected" title="S&amp;P 500 ETF">SPY</button>
+                    <button type="button" class="tag mw-chip" title="Nasdaq 100 ETF">QQQ</button>
+                    <button type="button" class="tag mw-chip mw-chip--selected" title="Total Bond ETF">BND</button>
+                    <button type="button" class="tag mw-chip mw-chip--selected" title="Gold ETF">GLD</button>
+                    <button type="button" class="tag mw-chip" title="Real Estate ETF">VNQ</button>
                 </div>
+                <div class="text-muted" style="font-size: 11px">5 of 10 selected · minimum 2</div>
+            </div>
 
-                <div class="form-row">
-                    <div class="form-group">
-                        <label for="period">Period</label>
-                        <select id="period">
-                            <option value="1y">1 Year</option>
-                            <option value="2y">2 Years</option>
-                            <option value="5y" selected>5 Years</option>
-                            <option value="10y">10 Years</option>
-                            <option value="max">All Available</option>
-                        </select>
-                    </div>
-
-                    <div class="form-group">
-                        <label for="risk-free-rate">Risk-Free Rate (monthly)</label>
-                        <input type="number" id="risk-free-rate" step="0.001" min="0" value="0.005" />
-                        <span class="hint">Decimal form (e.g. 0.005 = 0.5%)</span>
-                    </div>
+            <div class="card elev-sm">
+                <h6 style="margin: 0; color: var(--color-accent-300)">History window</h6>
+                <div class="seg" style="width: 100%">
+                    <label class="seg-opt" style="flex: 1"><input type="radio" name="mwperiod" value="1y">1Y</label>
+                    <label class="seg-opt" style="flex: 1"><input type="radio" name="mwperiod" value="2y">2Y</label>
+                    <label class="seg-opt" style="flex: 1"><input type="radio" name="mwperiod" value="5y" checked>5Y</label>
+                    <label class="seg-opt" style="flex: 1"><input type="radio" name="mwperiod" value="10y">10Y</label>
+                    <label class="seg-opt" style="flex: 1"><input type="radio" name="mwperiod" value="max">Max</label>
                 </div>
-
-                <button type="submit" id="analyze-btn">Analyze Portfolio</button>
-            </form>
-        </section>
-
-        <section id="loading" class="loading-section hidden">
-            <div class="spinner"></div>
-            <p>Fetching data and running optimization…</p>
-        </section>
-
-        <section id="results" class="results-section hidden">
-            <div id="error-message" class="error hidden"></div>
-
-            <div id="metrics" class="metrics-grid"></div>
-
-            <div class="chart-grid">
-                <div class="chart-card">
-                    <h2>Efficient Frontier</h2>
-                    <div class="chart-container">
-                        <canvas id="chart-frontier"></canvas>
-                    </div>
-                </div>
-                <div class="chart-card">
-                    <h2>Optimal Allocation</h2>
-                    <div class="chart-container">
-                        <canvas id="chart-pie"></canvas>
-                    </div>
-                </div>
-                <div class="chart-card">
-                    <h2>Capital Allocation Line</h2>
-                    <div class="chart-container">
-                        <canvas id="chart-cal"></canvas>
-                    </div>
-                </div>
-                <div class="chart-card">
-                    <h2>Correlation Heatmap</h2>
-                    <div class="chart-container">
-                        <canvas id="chart-corr"></canvas>
+                <div class="field" style="margin-top: var(--space-3)">
+                    <label for="mwrf">Risk-free rate · monthly</label>
+                    <div style="display: flex; gap: var(--space-2); align-items: center">
+                        <input id="mwrf" type="range" min="0" max="80" step="5" value="8"
+                            style="flex: 1; min-width: 0; accent-color: var(--color-accent); height: 20px" />
+                        <span style="font-family: var(--font-heading); font-size: 14px; min-width: 58px; text-align: right">0.20%</span>
                     </div>
                 </div>
             </div>
-        </section>
-    </div>
 
-    <script src="app.js"></script>
+            <button type="button" class="btn btn-primary btn-block" disabled style="height: 38px">Run analysis</button>
+
+            <nav class="mw-toc" aria-label="Report sections">
+                <a href="#frontier">01 Efficient frontier</a>
+                <a href="#allocation">02 Optimal allocation</a>
+                <a href="#correlation">03 Correlation matrix</a>
+                <a href="#assets">04 Per-asset statistics</a>
+                <a href="#saved">05 Saved runs</a>
+            </nav>
+
+            <div class="card elev-sm mw-rail-note">
+                <img src="assets/images/mascote-analise-de-dados.png" alt="" />
+                <p class="card-body">Monthly closes over the window, then 60 long-only quadratic programs — one per
+                    level of risk aversion — traced into the frontier below.</p>
+            </div>
+
+        </aside>
+
+        <main id="top" class="mw-report">
+            <div class="card elev-sm mw-placeholder">
+                <span class="card-kicker">Coming soon</span>
+                <p class="card-body">
+                    The report (efficient frontier, allocation, correlation matrix, per-asset statistics and saved
+                    runs) is being rebuilt section by section — see the implementation plan for the staged PRs ahead.
+                </p>
+            </div>
+        </main>
+    </div>
 </body>
 
 </html>
