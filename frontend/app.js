@@ -2,9 +2,10 @@
  * MarkoWizard — analytical workstation.
  *
  * Owns the control-rail state (universe, history window, risk-free rate),
- * the KPI band, and the efficient-frontier chart. The rest of the report
- * (allocation, correlation, per-asset statistics, saved runs) lands in
- * later PRs and will read from the same `state` object this file sets up.
+ * the KPI band, the efficient-frontier chart, and the allocation donut/cash
+ * blend/weights table. The rest of the report (correlation, per-asset
+ * statistics, saved runs) lands in later PRs and will read from the same
+ * `state` object this file sets up.
  *
  * No framework, no build step — plain DOM, matching the rest of the repo.
  */
@@ -138,6 +139,26 @@ function selectedPortfolio() {
   return state.result.efficient_frontier[iF];
 }
 
+/** Blends the selected portfolio with cash: a plain weighted average, valid
+ * for whatever point is currently selected — not the theoretical capital
+ * allocation line specifically, which (by construction) only dominates the
+ * frontier when it's anchored at the tangency portfolio. The backend's
+ * `capital_allocation_line` is fixed to the tangency portfolio for exactly
+ * that reason, so it can't be reused here once the frontier selection (PR 4)
+ * has moved off tangency; this local formula is what the design handoff's
+ * own prototype uses too, for any selected point, not just the tangency
+ * case the README's "prefer the API's CAL" note assumed. Sharpe is
+ * unaffected by a cash blend, so callers that need it just read `p.sharpe`
+ * directly. */
+function cashBlend(p) {
+  const cashP = state.cash / 100;
+  const rf = rfOf(state.appliedRfIdx);
+  return {
+    expectedReturn: cashP * rf + (1 - cashP) * p.expected_return,
+    risk: (1 - cashP) * p.risk,
+  };
+}
+
 async function runAnalysis() {
   if (state.running) return;
   state.running = true;
@@ -221,15 +242,19 @@ function kpiSectionHtml() {
   const periodWords = PERIOD_WORDS[state.appliedPeriod] || state.appliedPeriod;
   const lede =
     `Estimated from ${periodWords} monthly history at a ${pct(toReturn(rfOf(state.appliedRfIdx)))} ` +
-    `${unitWord} risk-free rate. Fully invested in the risky portfolio.`;
+    `${unitWord} risk-free rate. ` +
+    (state.cash > 0
+      ? `Figures below include a ${state.cash}% cash position.`
+      : "Fully invested in the risky portfolio.");
 
   const weights = Object.values(p.weights);
   const holdings = weights.filter((w) => w > 0.005).length;
   const diversification = 1 / weights.reduce((a, w) => a + w * w, 0);
+  const blend = cashBlend(p);
 
   const kpis = [
-    { label: "Expected return", value: pct(toReturn(p.expected_return)), note: unitWord },
-    { label: "Volatility", value: pct(toVol(p.risk)), note: "standard deviation" },
+    { label: "Expected return", value: pct(toReturn(blend.expectedReturn)), note: unitWord },
+    { label: "Volatility", value: pct(toVol(blend.risk)), note: "standard deviation" },
     { label: "Sharpe ratio", value: toSharpe(p.sharpe).toFixed(2), note: "unchanged by the cash blend", accent: true },
     { label: "Holdings", value: String(holdings), note: `of ${n} assets, non-zero weight` },
     { label: "Diversification", value: diversification.toFixed(1), note: "effective assets held" },
@@ -535,6 +560,166 @@ function renderFrontier() {
   updateFrontierSelection();
 }
 
+/* ── Optimal allocation ──────────────────────────────────────────────── */
+
+const DONUT_CIRCUMFERENCE = 2 * Math.PI * 52;
+
+function nameFor(ticker) {
+  return UNIVERSE.find((u) => u.t === ticker)?.n || ticker;
+}
+
+// Only the row identity (tickers/names/colors, from `result.tickers`) is
+// "base" — it never changes for a given result, regardless of frontier
+// selection, cash or units. Everything else (weights, bar widths, the donut,
+// the blended figures) is recomputed on every render into allocationUpdate().
+let allocationBaseResult = null;
+
+function allocationRowsHtml(result) {
+  const p = selectedPortfolio();
+  const cashP = state.cash / 100;
+
+  const rows = result.tickers.map((t, k) => {
+    const w = p.weights[t] ?? 0;
+    return {
+      ticker: t,
+      name: nameFor(t),
+      color: CHART_PALETTE[k % CHART_PALETTE.length],
+      w,
+      capPct: w * (1 - cashP) * 100,
+    };
+  });
+
+  const cols = "104px minmax(0,1fr) 104px minmax(90px,22%) 104px";
+  const assetRows = rows.map((r) => `
+    <div class="mw-grid-row mw-grid-row--body" style="grid-template-columns:${cols}">
+      <span class="mw-swatch"><span class="mw-swatch__dot" style="background:${r.color}"></span>${escapeHtml(r.ticker)}</span>
+      <span class="text-muted" style="font-size:13px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${escapeHtml(r.name)}</span>
+      <span class="mw-num" style="text-align:right">${pct(r.w, 1)}</span>
+      <span class="mw-bar-track"><span class="mw-bar-fill" style="width:${r.capPct.toFixed(2)}%;background:${r.color}"></span></span>
+      <span class="mw-num" style="text-align:right">${pct(r.capPct / 100, 1)}</span>
+    </div>`).join("");
+
+  const cashRow = `
+    <div class="mw-grid-row mw-grid-row--body" style="grid-template-columns:${cols}">
+      <span class="mw-swatch" style="color:var(--color-neutral-400)"><span class="mw-swatch__dot" style="background:var(--color-neutral-700)"></span>CASH</span>
+      <span class="text-muted" style="font-size:13px">Risk-free</span>
+      <span class="text-muted mw-num" style="text-align:right">—</span>
+      <span class="mw-bar-track"><span class="mw-bar-fill" style="width:${state.cash}%;background:var(--color-neutral-700)"></span></span>
+      <span class="mw-num" style="text-align:right">${state.cash}%</span>
+    </div>`;
+
+  return assetRows + cashRow;
+}
+
+function allocationArcsHtml(result) {
+  const p = selectedPortfolio();
+  const cashP = state.cash / 100;
+  let acc = 0;
+  return result.tickers
+    .map((t, k) => ({ w: p.weights[t] ?? 0, color: CHART_PALETTE[k % CHART_PALETTE.length] }))
+    .filter((r) => r.w > 0.0005)
+    .map((r) => {
+      const len = r.w * (1 - cashP) * DONUT_CIRCUMFERENCE;
+      const dash = `${len.toFixed(1)} ${(DONUT_CIRCUMFERENCE - len).toFixed(1)}`;
+      const offset = (-acc).toFixed(1);
+      acc += len;
+      return `<circle cx="64" cy="64" r="52" fill="none" stroke="${r.color}" stroke-width="13" stroke-dasharray="${dash}" stroke-dashoffset="${offset}" transform="rotate(-90 64 64)"></circle>`;
+    })
+    .join("");
+}
+
+function allocationBaseHtml(result) {
+  return `
+    <section id="allocation">
+      <h6 style="color:var(--color-accent-300)">02 · Holdings</h6>
+      <h3 style="margin-bottom:var(--space-2)">Optimal allocation</h3>
+      <p class="text-muted mw-section-lede">Weights for the selected portfolio. Blending with cash walks down the
+        capital allocation line: return and risk both scale, the Sharpe ratio does not move.</p>
+
+      <div class="mw-alloc-row">
+        <div class="card elev-sm mw-alloc-donut-card">
+          <div class="mw-alloc-donut">
+            <svg viewBox="0 0 128 128">
+              <circle cx="64" cy="64" r="52" fill="none" stroke="var(--color-neutral-800)" stroke-width="13"></circle>
+              <g id="mw-alloc-arcs"></g>
+            </svg>
+            <div class="mw-alloc-donut__overlay" id="mw-alloc-overlay"></div>
+          </div>
+          <div class="text-muted mw-alloc-donut__note" id="mw-alloc-note"></div>
+        </div>
+
+        <div class="mw-alloc-main">
+          <div class="card elev-sm mw-cash-card">
+            <div class="mw-cash-card__head">
+              <span class="card-kicker">Blend with cash</span>
+              <span class="mw-cash-card__pct" id="mw-cash-pct"></span>
+            </div>
+            <input id="mw-cash" type="range" min="0" max="90" step="5" value="${state.cash}" />
+            <div class="text-muted" style="font-size:12px" id="mw-cal-note"></div>
+          </div>
+
+          <div class="card elev-sm mw-table">
+            <div class="mw-table__inner" style="min-width:520px">
+              <div class="mw-grid-row mw-grid-row--head" style="grid-template-columns:104px minmax(0,1fr) 104px minmax(90px,22%) 104px">
+                <span>Asset</span><span>Name</span><span style="text-align:right">In risky mix</span><span>Share of capital</span><span style="text-align:right">Of capital</span>
+              </div>
+              <div id="mw-alloc-rows"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>`;
+}
+
+function attachAllocationEvents() {
+  const cash = document.getElementById("mw-cash");
+  if (!cash) return;
+  cash.addEventListener("input", () => {
+    state.cash = +cash.value;
+    render();
+  });
+}
+
+/** Refreshes everything that depends on the selected portfolio, cash or
+ * units — the donut arcs, its center overlay, the cash caption, and the
+ * weights rows. Deliberately does not touch `#mw-cash` itself: this runs on
+ * every `input` event the slider fires, and replacing the slider element
+ * mid-drag would interrupt the browser's own drag gesture on it (the same
+ * class of bug the frontier chart's pointer capture has to avoid). */
+function updateAllocation() {
+  const p = selectedPortfolio();
+  const unitWord = isAnnual() ? "annualized" : "monthly";
+  const blend = cashBlend(p);
+
+  document.getElementById("mw-alloc-arcs").innerHTML = allocationArcsHtml(state.result);
+  document.getElementById("mw-alloc-overlay").innerHTML = `
+    <span class="mw-alloc-donut__value">${escapeHtml(pct(toReturn(blend.expectedReturn)))}</span>
+    <span class="text-muted" style="font-size:10.5px">expected · ${escapeHtml(unitWord)}</span>`;
+  setText("mw-alloc-note", state.cash > 0 ? `Risky mix at ${100 - state.cash}% of capital` : "Fully invested");
+  setText("mw-cash-pct", `${state.cash}%`);
+  setText(
+    "mw-cal-note",
+    `At ${state.cash}% cash: ${pct(toReturn(blend.expectedReturn))} expected return, ` +
+      `${pct(toVol(blend.risk))} volatility, Sharpe ${toSharpe(p.sharpe).toFixed(2)}.`,
+  );
+  document.getElementById("mw-alloc-rows").innerHTML = allocationRowsHtml(state.result);
+}
+
+function renderAllocation() {
+  const slot = document.getElementById("mw-allocation-slot");
+  if (!state.result || state.error) {
+    slot.innerHTML = "";
+    allocationBaseResult = null;
+    return;
+  }
+  if (state.result !== allocationBaseResult) {
+    slot.innerHTML = allocationBaseHtml(state.result);
+    attachAllocationEvents();
+    allocationBaseResult = state.result;
+  }
+  updateAllocation();
+}
+
 function renderKpiSlot() {
   const slot = document.getElementById("mw-kpi-slot");
   if (state.error) {
@@ -552,6 +737,7 @@ function render() {
   renderOverlay();
   renderKpiSlot();
   renderFrontier();
+  renderAllocation();
 }
 
 /* ── Event wiring ────────────────────────────────────────────────────── */
