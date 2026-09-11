@@ -42,11 +42,21 @@ class CapitalAllocationPoint(BaseModel):
     label: str
 
 
+class AssetStatistics(BaseModel):
+    """Standalone (non-portfolio) return/volatility statistics for one asset."""
+
+    ticker: str
+    expected_return: float
+    volatility: float
+
+
 class AnalyzeResponse(BaseModel):
     """Response from the /analyze endpoint."""
 
     tickers: list[str]
     efficient_frontier: list[PortfolioMetrics]
     max_sharpe_portfolio: MaxSharpePortfolio
+    min_variance_portfolio: PortfolioMetrics
     capital_allocation_line: list[CapitalAllocationPoint]
     correlation_matrix: list[list[float]]
+    asset_statistics: list[AssetStatistics]
