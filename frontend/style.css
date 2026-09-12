@@ -222,6 +222,32 @@ input[type="range"]:hover::-moz-range-thumb {
   }
 }
 
+/* Risk-free rate's exact-entry field, next to the slider. Plain text (not
+   <input type="number">) so its displayed/typed decimal separator isn't at
+   the mercy of the browser's locale — see the comment where it's parsed in
+   app.js. Borderless until hovered/focused so it still reads as "the
+   slider's value", not a separate form control: the slider covers
+   quick/rough adjustment, this covers typing an exact number, since
+   dragging alone can't reliably hit one. */
+.mw-rf-value {
+  width: 60px;
+  text-align: right;
+  font-family: var(--font-heading);
+  font-size: 14px;
+  color: var(--color-text);
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: var(--radius-sm);
+  padding: 2px 4px;
+}
+.mw-rf-value:hover {
+  border-color: var(--color-divider);
+}
+.mw-rf-value:focus-visible {
+  outline: none;
+  border-color: var(--color-accent);
+}
+
 /* ── Components ──────────────────────────────────────────────────────── */
 
 .btn {
