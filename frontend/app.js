@@ -8,17 +8,19 @@
  * left undesigned in the handoff; see the comment above the saved-runs
  * functions below).
  *
- * The universe is free-text now, not the handoff's fixed 10-asset chip
- * list — a deliberate departure from the design, not a gap being filled.
- * The 10 are kept as quick-pick chips for discoverability; any ticker can
- * be typed in alongside them.
+ * The universe is free-text, not the handoff's fixed 10-asset chip list —
+ * a deliberate departure from the design, not a gap being filled. There's
+ * no curated shortlist and no default selection either: the rail starts
+ * empty and the report only appears once you've typed in at least two
+ * tickers and pressed Run.
  *
  * No framework, no build step — plain DOM, matching the rest of the repo.
  */
 
-// Curated quick-picks shown as chips. This is no longer the only way to
-// select an asset — see the free-text ticker input wired up below — so this
-// is just a shortlist for discoverability, not an enforced universe.
+// Friendly display names for a handful of well-known tickers — used only
+// for the "Name" column in tables (nameFor() falls back to the ticker
+// itself for anything not in here). Not shown as chips or otherwise
+// exposed as a selectable list; there's no curated universe anymore.
 const UNIVERSE = [
   { t: "AAPL", n: "Apple" },
   { t: "MSFT", n: "Microsoft" },
@@ -32,7 +34,7 @@ const UNIVERSE = [
   { t: "VNQ", n: "Real Estate ETF" },
 ];
 
-const DEFAULT_SEL = ["AAPL", "MSFT", "SPY", "BND", "GLD"];
+const DEFAULT_SEL = [];
 
 // Same ticker pattern the backend validates against (markowizard/data.py's
 // _TICKER_PATTERN) — checked here too so a malformed ticker gets an inline
@@ -59,13 +61,14 @@ const PERIOD_WORDS = {
 
 // Pending vs. applied mirrors the design handoff's state shape: `sel` /
 // `period` / `rfIdx` are what the rail currently shows; `appliedSel` / etc.
-// are what `result` was actually solved from. They start out equal (we
-// auto-run once on load), and diverge the moment the user touches a control
-// — that's what drives "Run analysis" vs. "Re-run analysis".
+// are what `result` was actually solved from. Both start empty/default and
+// stay equal until the user changes something — that's what drives "Run
+// analysis" vs. "Re-run analysis". Unlike the handoff (and unlike this
+// project's own earlier version with a curated default), there's no
+// default selection to auto-run on load: `sel` starts empty, so the first
+// run only happens once the user has typed in at least two tickers.
 //
-// `sel` is ticker symbols now (string[]), not indices into UNIVERSE — the
-// handoff's fixed 10-asset universe was superseded by free-text entry, so a
-// selection can contain any ticker, curated or typed.
+// `sel` is ticker symbols (string[]), not indices into a fixed list.
 const state = {
   sel: [...DEFAULT_SEL],
   period: "5y",
@@ -181,7 +184,7 @@ function cashBlend(p) {
 }
 
 async function runAnalysis() {
-  if (state.running) return;
+  if (state.running || state.sel.length < 2) return;
   state.running = true;
   state.error = null;
   render();
@@ -227,32 +230,33 @@ function renderHeader() {
 
   const shownSel = state.result ? state.appliedSel : state.sel;
   const shownPeriod = state.result ? state.appliedPeriod : state.period;
-  universeTag.textContent = shownSel.join(" · ");
+  universeTag.textContent = shownSel.length ? shownSel.join(" · ") : "No tickers yet";
   periodTag.textContent = (shownPeriod === "max" ? "Max" : shownPeriod.toUpperCase()) + " monthly";
   status.textContent = state.result ? `Solved ${state.solvedAt}` : "Not run yet";
   unitsBtn.textContent = isAnnual() ? "Annualized" : "Monthly";
 
   const runBtn = document.getElementById("mw-run-btn");
   runBtn.textContent = isStale() ? "Re-run analysis" : "Run analysis";
-  runBtn.disabled = state.running;
+  runBtn.disabled = state.running || state.sel.length < 2;
 }
 
-/** Renders the curated quick-pick chips plus any typed tickers not in that
- * shortlist — the whole row is rebuilt each time (cheap, ~10-15 buttons, no
- * drag/native state to preserve), so a typed ticker that gets toggled off
- * simply isn't part of `state.sel` on the next render and disappears rather
- * than needing a separate "remove" affordance. */
+/** Renders one chip per selected ticker — there's no curated shortlist
+ * anymore, so every chip here is something the user typed in, and clicking
+ * one always means "remove it" (guarded by the minimum-2 floor). The row
+ * is rebuilt on every render (cheap, at most MAX_TICKERS buttons, nothing
+ * holding native drag state to preserve). */
 function renderChips() {
-  const extras = state.sel.filter((t) => !UNIVERSE.some((u) => u.t === t));
-  const items = [...UNIVERSE.map((u) => u.t), ...extras];
-
-  document.getElementById("mw-chips").innerHTML = items
-    .map((t) => {
-      const known = UNIVERSE.find((u) => u.t === t);
-      const selected = state.sel.includes(t);
-      return `<button type="button" class="tag mw-chip${selected ? " mw-chip--selected" : ""}" data-ticker="${escapeHtml(t)}" title="${escapeHtml(known ? known.n : t)}">${escapeHtml(t)}</button>`;
-    })
-    .join("");
+  const container = document.getElementById("mw-chips");
+  if (state.sel.length === 0) {
+    container.innerHTML = `<span class="text-muted" style="font-size: 11.5px">No tickers yet — add some below.</span>`;
+  } else {
+    container.innerHTML = state.sel
+      .map((t) => {
+        const known = UNIVERSE.find((u) => u.t === t);
+        return `<button type="button" class="tag mw-chip mw-chip--selected" data-ticker="${escapeHtml(t)}" title="${escapeHtml(known ? known.n : t)}">${escapeHtml(t)}</button>`;
+      })
+      .join("");
+  }
   document.getElementById("mw-chip-count").textContent = `${state.sel.length} selected · minimum 2`;
 }
 
@@ -312,6 +316,18 @@ function errorCardHtml() {
       <span class="card-kicker">Analysis failed</span>
       <p class="card-body">${escapeHtml(state.error)}</p>
       <button type="button" class="btn btn-secondary" data-action="run" style="align-self:flex-start">Retry</button>
+    </div>`;
+}
+
+// Shown before the first run: with no default selection, the report can't
+// just appear on load anymore (see the file header comment), so this is
+// what fills the space until there's something to show.
+function getStartedCardHtml() {
+  return `
+    <div class="card elev-sm mw-placeholder">
+      <img src="assets/images/mascote-analise-de-dados.png" alt="" style="width:56px;height:56px;object-fit:contain" />
+      <span class="card-kicker">Get started</span>
+      <p class="card-body">Search for at least two tickers in the rail, then run the analysis to see the report.</p>
     </div>`;
 }
 
@@ -1047,7 +1063,7 @@ function renderKpiSlot() {
   } else if (state.result) {
     slot.innerHTML = kpiSectionHtml();
   } else {
-    slot.innerHTML = "";
+    slot.innerHTML = getStartedCardHtml();
   }
 }
 
@@ -1069,10 +1085,8 @@ function init() {
   document.getElementById("mw-chips").addEventListener("click", (e) => {
     const btn = e.target.closest(".mw-chip");
     if (!btn) return;
-    const ticker = btn.dataset.ticker;
-    const selected = state.sel.includes(ticker);
-    if (selected && state.sel.length <= 2) return; // minimum 2, per the handoff
-    state.sel = selected ? state.sel.filter((t) => t !== ticker) : [...state.sel, ticker].sort();
+    if (state.sel.length <= 2) return; // minimum 2
+    state.sel = state.sel.filter((t) => t !== btn.dataset.ticker);
     render();
   });
 
@@ -1147,8 +1161,9 @@ function init() {
     if (deleteBtn) deleteSavedRun(deleteBtn.dataset.runId);
   });
 
+  // No default selection to auto-run anymore — the report only appears
+  // once the user has typed in at least two tickers and pressed Run.
   render();
-  runAnalysis();
 }
 
 document.addEventListener("DOMContentLoaded", init);
