@@ -51,9 +51,11 @@
                 <div class="field" style="margin-top: var(--space-3)">
                     <label for="mwrf" id="mwrf-label">Risk-free rate · monthly</label>
                     <div style="display: flex; gap: var(--space-2); align-items: center">
-                        <input id="mwrf" type="range" min="0" max="80" step="5" value="8"
+                        <input id="mwrf" type="range" min="0" max="80" step="1" value="8"
                             style="flex: 1; min-width: 0; accent-color: var(--color-accent); height: 20px" />
-                        <span style="font-family: var(--font-heading); font-size: 14px; min-width: 58px; text-align: right" id="mwrf-display">0.20%</span>
+                        <input id="mwrf-display" class="mw-rf-value" type="text" inputmode="decimal"
+                            autocomplete="off" aria-label="Risk-free rate, percent" value="0.20" />
+                        <span class="text-muted" style="font-size: 14px">%</span>
                     </div>
                 </div>
             </div>

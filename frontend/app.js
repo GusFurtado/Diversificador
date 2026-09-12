@@ -10,9 +10,11 @@
  *
  * The universe is free-text, not the handoff's fixed 10-asset chip list —
  * a deliberate departure from the design, not a gap being filled. There's
- * no curated shortlist and no default selection either: the rail starts
- * empty and the report only appears once you've typed in at least two
- * tickers and pressed Run.
+ * no curated shortlist and no hardcoded default selection either: on load,
+ * the rail starts from your most recent saved run if you have one (see
+ * init()), or empty otherwise — the report only appears once there are at
+ * least two tickers selected and Run has been pressed, automatically or
+ * otherwise.
  *
  * No framework, no build step — plain DOM, matching the rest of the repo.
  */
@@ -95,12 +97,12 @@ const PERIOD_WORDS = {
 
 // Pending vs. applied mirrors the design handoff's state shape: `sel` /
 // `period` / `rfIdx` are what the rail currently shows; `appliedSel` / etc.
-// are what `result` was actually solved from. Both start empty/default and
-// stay equal until the user changes something — that's what drives "Run
-// analysis" vs. "Re-run analysis". Unlike the handoff (and unlike this
-// project's own earlier version with a curated default), there's no
-// default selection to auto-run on load: `sel` starts empty, so the first
-// run only happens once the user has typed in at least two tickers.
+// are what `result` was actually solved from. Both start out equal and
+// stay that way until the user changes something — that's what drives
+// "Run analysis" vs. "Re-run analysis". There's no hardcoded default
+// selection (unlike the handoff, and unlike this project's own earlier
+// version with a curated default) — `sel` starts empty and init() fills it
+// from the latest saved run instead, if one exists.
 //
 // `sel` is ticker symbols (string[]), not indices into a fixed list.
 const state = {
@@ -134,8 +136,15 @@ function toSharpe(v) {
 function pct(v, decimals = 2) {
   return (v * 100).toFixed(decimals) + "%";
 }
+const RF_STEP = 0.00025; // monthly decimal per slider unit (0..80 -> 0..2%)
 function rfOf(idx) {
-  return +(idx * 0.00025).toFixed(5);
+  return +(idx * RF_STEP).toFixed(5);
+}
+/** Inverse of rfOf(), rounded to the nearest representable slider position —
+ * used when a monthly rate comes from the exact-entry field rather than
+ * the slider itself. */
+function idxForMonthlyRf(monthly) {
+  return Math.max(0, Math.min(80, Math.round(monthly / RF_STEP)));
 }
 function escapeHtml(s) {
   return String(s).replace(/[&<>"']/g, (c) => ({
@@ -302,7 +311,26 @@ function renderChips() {
 function renderRfControl() {
   const unitWord = isAnnual() ? "annualized" : "monthly";
   document.getElementById("mwrf-label").textContent = `Risk-free rate · ${unitWord}`;
-  document.getElementById("mwrf-display").textContent = pct(toReturn(rfOf(state.rfIdx)));
+
+  // Keeps the slider's thumb position in sync with state.rfIdx regardless
+  // of what changed it (typing in the exact-entry field, toggling units —
+  // which doesn't change rfIdx but still re-renders — or loading a saved
+  // run). Previously only the slider's own `input` handler ever moved
+  // state.rfIdx, so this direction of the sync never existed; e.g. loading
+  // a saved run would leave the thumb sitting wherever it happened to be
+  // instead of where that run's rate actually was. Always safe to set,
+  // including mid-drag: the value it's set to is the same one the slider
+  // just reported in its own handler, so this never fights the gesture.
+  document.getElementById("mwrf").value = state.rfIdx;
+
+  const display = document.getElementById("mwrf-display");
+  // Don't stomp on the field while the user is actively typing in it — a
+  // render() can fire from something unrelated (e.g. the running overlay
+  // finishing) while it's focused, and reformatting mid-edit would fight
+  // their keystrokes/cursor position.
+  if (document.activeElement !== display) {
+    display.value = (toReturn(rfOf(state.rfIdx)) * 100).toFixed(2);
+  }
 }
 
 function renderOverlay() {
@@ -364,9 +392,8 @@ function errorCardHtml() {
     </div>`;
 }
 
-// Shown before the first run: with no default selection, the report can't
-// just appear on load anymore (see the file header comment), so this is
-// what fills the space until there's something to show.
+// Shown before the first run — reached only when there's no saved run to
+// auto-load (see init()) and nothing has been run yet this session.
 function getStartedCardHtml() {
   return `
     <div class="card elev-sm mw-placeholder">
@@ -1181,6 +1208,29 @@ function init() {
     render(); // updates #mwrf-display too, via renderRfControl()
   });
 
+  // The slider covers quick/rough adjustment; this covers typing an exact
+  // value, since a drag gesture can rarely land on an exact number. Uses
+  // `change` (commits on blur/Enter) rather than `input` so reformatting
+  // the field doesn't fight the user's keystrokes mid-edit.
+  const rfDisplay = document.getElementById("mwrf-display");
+  rfDisplay.addEventListener("change", () => {
+    // Plain text, not <input type="number"> — a number input's displayed
+    // decimal separator follows the browser's locale (comma in many
+    // locales), while its underlying .value is always period-formatted
+    // regardless, which is a recipe for someone typing a perfectly
+    // reasonable "1,5" that silently fails to parse. Comma is accepted
+    // here as an alias for the decimal point rather than fighting it.
+    const typed = parseFloat(rfDisplay.value.trim().replace(",", "."));
+    if (Number.isNaN(typed)) {
+      render(); // revert to the last valid value
+      return;
+    }
+    const pctDecimal = Math.max(0, typed) / 100;
+    const monthly = isAnnual() ? Math.pow(1 + pctDecimal, 1 / 12) - 1 : pctDecimal;
+    state.rfIdx = idxForMonthlyRf(monthly);
+    render();
+  });
+
   document.getElementById("mw-units-btn").addEventListener("click", () => {
     state.units = isAnnual() ? null : "annual";
     render();
@@ -1206,9 +1256,16 @@ function init() {
     if (deleteBtn) deleteSavedRun(deleteBtn.dataset.runId);
   });
 
-  // No default selection to auto-run anymore — the report only appears
-  // once the user has typed in at least two tickers and pressed Run.
-  render();
+  // No default selection anymore, but a returning visitor's most recent
+  // saved run (saveCurrentRun() unshifts, so index 0 is the newest) stands
+  // in for one — loadSavedRun() sets sel/period/rfIdx and runs it. First-
+  // time visitors with nothing saved just get the get-started state.
+  const saved = loadSavedRuns();
+  if (saved.length > 0) {
+    loadSavedRun(saved[0].id);
+  } else {
+    render();
+  }
 }
 
 document.addEventListener("DOMContentLoaded", init);
