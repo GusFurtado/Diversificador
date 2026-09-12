@@ -294,6 +294,17 @@ function renderChips() {
   document.getElementById("mw-chip-count").textContent = `${state.sel.length} selected · minimum 2`;
 }
 
+/** Keeps the risk-free field's label and value in sync with the units
+ * toggle. This used to be updated only from the slider's own `input`
+ * handler, so it went stale the moment you toggled Monthly/Annualized
+ * without also touching the slider — it belongs in the main render loop
+ * like every other unit-dependent display, not off in its own handler. */
+function renderRfControl() {
+  const unitWord = isAnnual() ? "annualized" : "monthly";
+  document.getElementById("mwrf-label").textContent = `Risk-free rate · ${unitWord}`;
+  document.getElementById("mwrf-display").textContent = pct(toReturn(rfOf(state.rfIdx)));
+}
+
 function renderOverlay() {
   const overlay = document.getElementById("mw-overlay");
   overlay.hidden = !state.running;
@@ -1104,6 +1115,7 @@ function renderKpiSlot() {
 function render() {
   renderHeader();
   renderChips();
+  renderRfControl();
   renderOverlay();
   renderKpiSlot();
   renderFrontier();
@@ -1166,8 +1178,7 @@ function init() {
   const rf = document.getElementById("mwrf");
   rf.addEventListener("input", () => {
     state.rfIdx = +rf.value;
-    document.getElementById("mwrf-display").textContent = pct(toReturn(rfOf(state.rfIdx)));
-    render();
+    render(); // updates #mwrf-display too, via renderRfControl()
   });
 
   document.getElementById("mw-units-btn").addEventListener("click", () => {

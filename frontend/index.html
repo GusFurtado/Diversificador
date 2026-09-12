@@ -31,7 +31,7 @@
                 <h6 style="margin: 0; color: var(--color-accent-300)">Universe</h6>
                 <div class="mw-chip-row" id="mw-chips"></div>
                 <form id="mw-add-ticker-form" class="mw-add-ticker">
-                    <input type="text" id="mw-add-ticker-input" placeholder="Add a ticker (e.g. TSLA)" maxlength="10"
+                    <input type="text" id="mw-add-ticker-input" placeholder="Add a ticker (e.g. SPY)" maxlength="10"
                         autocomplete="off" autocapitalize="characters" spellcheck="false" aria-label="Add a ticker" />
                     <button type="submit" class="btn btn-secondary">Add</button>
                 </form>
@@ -49,7 +49,7 @@
                     <label class="seg-opt" style="flex: 1"><input type="radio" name="mwperiod" value="max">Max</label>
                 </div>
                 <div class="field" style="margin-top: var(--space-3)">
-                    <label for="mwrf">Risk-free rate · monthly</label>
+                    <label for="mwrf" id="mwrf-label">Risk-free rate · monthly</label>
                     <div style="display: flex; gap: var(--space-2); align-items: center">
                         <input id="mwrf" type="range" min="0" max="80" step="5" value="8"
                             style="flex: 1; min-width: 0; accent-color: var(--color-accent); height: 20px" />
@@ -59,20 +59,6 @@
             </div>
 
             <button type="button" class="btn btn-primary btn-block" id="mw-run-btn" data-action="run" style="height: 38px">Run analysis</button>
-
-            <nav class="mw-toc" aria-label="Report sections">
-                <a href="#frontier">01 Efficient frontier</a>
-                <a href="#allocation">02 Optimal allocation</a>
-                <a href="#correlation">03 Correlation matrix</a>
-                <a href="#assets">04 Per-asset statistics</a>
-                <a href="#saved">05 Saved runs</a>
-            </nav>
-
-            <div class="card elev-sm mw-rail-note">
-                <img src="assets/images/mascote-analise-de-dados.png" alt="" />
-                <p class="card-body">Monthly closes over the window, then 60 long-only quadratic programs — one per
-                    level of risk aversion — traced into the frontier below.</p>
-            </div>
 
         </aside>
 
