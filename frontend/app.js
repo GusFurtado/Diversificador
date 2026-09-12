@@ -8,9 +8,17 @@
  * left undesigned in the handoff; see the comment above the saved-runs
  * functions below).
  *
+ * The universe is free-text now, not the handoff's fixed 10-asset chip
+ * list — a deliberate departure from the design, not a gap being filled.
+ * The 10 are kept as quick-pick chips for discoverability; any ticker can
+ * be typed in alongside them.
+ *
  * No framework, no build step — plain DOM, matching the rest of the repo.
  */
 
+// Curated quick-picks shown as chips. This is no longer the only way to
+// select an asset — see the free-text ticker input wired up below — so this
+// is just a shortlist for discoverability, not an enforced universe.
 const UNIVERSE = [
   { t: "AAPL", n: "Apple" },
   { t: "MSFT", n: "Microsoft" },
@@ -24,7 +32,15 @@ const UNIVERSE = [
   { t: "VNQ", n: "Real Estate ETF" },
 ];
 
-const DEFAULT_SEL = [0, 1, 5, 7, 8]; // AAPL, MSFT, SPY, BND, GLD
+const DEFAULT_SEL = ["AAPL", "MSFT", "SPY", "BND", "GLD"];
+
+// Same ticker pattern the backend validates against (markowizard/data.py's
+// _TICKER_PATTERN) — checked here too so a malformed ticker gets an inline
+// message instead of a round trip to /api/analyze just to find out.
+const TICKER_PATTERN = /^[A-Z0-9.-]+$/;
+const MAX_TICKERS = 15; // soft cap — nothing in the math requires this, but
+// the correlation grid, weights table, etc. all scale with N and the
+// handoff's whole layout was measured against ~10 assets.
 
 // Chart series order, assigned by position in the selection — shared by the
 // frontier's per-asset dots and (in later PRs) the allocation donut/table.
@@ -46,6 +62,10 @@ const PERIOD_WORDS = {
 // are what `result` was actually solved from. They start out equal (we
 // auto-run once on load), and diverge the moment the user touches a control
 // — that's what drives "Run analysis" vs. "Re-run analysis".
+//
+// `sel` is ticker symbols now (string[]), not indices into UNIVERSE — the
+// handoff's fixed 10-asset universe was superseded by free-text entry, so a
+// selection can contain any ticker, curated or typed.
 const state = {
   sel: [...DEFAULT_SEL],
   period: "5y",
@@ -166,7 +186,7 @@ async function runAnalysis() {
   state.error = null;
   render();
 
-  const tickers = state.sel.map((i) => UNIVERSE[i].t);
+  const tickers = state.sel;
   try {
     const resp = await fetch("/api/analyze", {
       method: "POST",
@@ -207,7 +227,7 @@ function renderHeader() {
 
   const shownSel = state.result ? state.appliedSel : state.sel;
   const shownPeriod = state.result ? state.appliedPeriod : state.period;
-  universeTag.textContent = shownSel.map((i) => UNIVERSE[i].t).join(" · ");
+  universeTag.textContent = shownSel.join(" · ");
   periodTag.textContent = (shownPeriod === "max" ? "Max" : shownPeriod.toUpperCase()) + " monthly";
   status.textContent = state.result ? `Solved ${state.solvedAt}` : "Not run yet";
   unitsBtn.textContent = isAnnual() ? "Annualized" : "Monthly";
@@ -217,20 +237,29 @@ function renderHeader() {
   runBtn.disabled = state.running;
 }
 
+/** Renders the curated quick-pick chips plus any typed tickers not in that
+ * shortlist — the whole row is rebuilt each time (cheap, ~10-15 buttons, no
+ * drag/native state to preserve), so a typed ticker that gets toggled off
+ * simply isn't part of `state.sel` on the next render and disappears rather
+ * than needing a separate "remove" affordance. */
 function renderChips() {
-  document.getElementById("mw-chips").querySelectorAll(".mw-chip").forEach((btn) => {
-    const idx = +btn.dataset.idx;
-    btn.classList.toggle("mw-chip--selected", state.sel.includes(idx));
-  });
-  document.getElementById("mw-chip-count").textContent =
-    `${state.sel.length} of ${UNIVERSE.length} selected · minimum 2`;
+  const extras = state.sel.filter((t) => !UNIVERSE.some((u) => u.t === t));
+  const items = [...UNIVERSE.map((u) => u.t), ...extras];
+
+  document.getElementById("mw-chips").innerHTML = items
+    .map((t) => {
+      const known = UNIVERSE.find((u) => u.t === t);
+      const selected = state.sel.includes(t);
+      return `<button type="button" class="tag mw-chip${selected ? " mw-chip--selected" : ""}" data-ticker="${escapeHtml(t)}" title="${escapeHtml(known ? known.n : t)}">${escapeHtml(t)}</button>`;
+    })
+    .join("");
+  document.getElementById("mw-chip-count").textContent = `${state.sel.length} selected · minimum 2`;
 }
 
 function renderOverlay() {
   const overlay = document.getElementById("mw-overlay");
   overlay.hidden = !state.running;
-  document.getElementById("mw-overlay-note").textContent =
-    state.sel.map((i) => UNIVERSE[i].t).join(" · ");
+  document.getElementById("mw-overlay-note").textContent = state.sel.join(" · ");
 }
 
 function kpiSectionHtml() {
@@ -873,7 +902,14 @@ function loadSavedRuns() {
   try {
     const raw = localStorage.getItem(SAVED_RUNS_KEY);
     const parsed = raw ? JSON.parse(raw) : [];
-    return Array.isArray(parsed) ? parsed : [];
+    if (!Array.isArray(parsed)) return [];
+    // `sel` used to be indices into the (now-superseded) fixed UNIVERSE
+    // array; free-text entry changed it to ticker strings. Drop anything
+    // saved under the old shape rather than let it silently corrupt a
+    // reload — this only matters for runs saved before this change, and
+    // there's no way to recover the old numeric->ticker mapping generically
+    // (a typed, non-UNIVERSE ticker never had an index to begin with).
+    return parsed.filter((r) => Array.isArray(r?.sel) && r.sel.every((t) => typeof t === "string"));
   } catch {
     // Storage unavailable (private browsing, disabled, corrupted value) —
     // degrade to "no saved runs" rather than breaking the report.
@@ -962,7 +998,7 @@ function savedRunsSectionHtml() {
   const cols = "minmax(0,1.1fr) minmax(0,1.6fr) 112px 92px 92px 80px 76px";
   const rows = runs
     .map((r) => {
-      const universe = r.sel.map((i) => UNIVERSE[i]?.t).filter(Boolean).join(" · ");
+      const universe = r.sel.join(" · ");
       const windowLabel = (r.period === "max" ? "Max" : r.period.toUpperCase()) + " monthly";
       return `
         <div class="mw-grid-row mw-grid-row--body" style="grid-template-columns:${cols}">
@@ -1033,10 +1069,42 @@ function init() {
   document.getElementById("mw-chips").addEventListener("click", (e) => {
     const btn = e.target.closest(".mw-chip");
     if (!btn) return;
-    const idx = +btn.dataset.idx;
-    const selected = state.sel.includes(idx);
+    const ticker = btn.dataset.ticker;
+    const selected = state.sel.includes(ticker);
     if (selected && state.sel.length <= 2) return; // minimum 2, per the handoff
-    state.sel = selected ? state.sel.filter((i) => i !== idx) : [...state.sel, idx].sort((a, b) => a - b);
+    state.sel = selected ? state.sel.filter((t) => t !== ticker) : [...state.sel, ticker].sort();
+    render();
+  });
+
+  document.getElementById("mw-add-ticker-form").addEventListener("submit", (e) => {
+    e.preventDefault();
+    const input = document.getElementById("mw-add-ticker-input");
+    const errorEl = document.getElementById("mw-add-ticker-error");
+    const ticker = input.value.trim().toUpperCase();
+    errorEl.hidden = true;
+    if (!ticker) return;
+
+    if (!TICKER_PATTERN.test(ticker)) {
+      errorEl.textContent = "Tickers may only contain letters, digits, dots, and hyphens.";
+      errorEl.hidden = false;
+      return;
+    }
+    if (state.sel.includes(ticker)) {
+      errorEl.textContent = `${ticker} is already selected.`;
+      errorEl.hidden = false;
+      return;
+    }
+    if (state.sel.length >= MAX_TICKERS) {
+      errorEl.textContent = `Up to ${MAX_TICKERS} assets at a time.`;
+      errorEl.hidden = false;
+      return;
+    }
+    // Not checked against a real symbol lookup — same as everywhere else in
+    // the rail, a bad ticker surfaces through the normal Run -> error-card
+    // path (the backend already reports "Tickers not found" clearly) rather
+    // than needing a separate pre-validation round trip here.
+    state.sel = [...state.sel, ticker].sort();
+    input.value = "";
     render();
   });
 
