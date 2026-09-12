@@ -13,7 +13,7 @@ from markowizard.core import MarkowitzOptimizer
 try:
     __version__ = version("markowizard")
 except PackageNotFoundError:
-    __version__ = "0.1.0"
+    __version__ = "0.2.0"
 
 __all__ = [
     "CapitalAllocator",
