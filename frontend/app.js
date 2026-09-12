@@ -45,10 +45,44 @@ const MAX_TICKERS = 15; // soft cap — nothing in the math requires this, but
 // handoff's whole layout was measured against ~10 assets.
 
 // Chart series order, assigned by position in the selection — shared by the
-// frontier's per-asset dots and (in later PRs) the allocation donut/table.
+// frontier's per-asset dots, the allocation donut/table, and the per-asset
+// statistics table.
+//
+// This is a deliberate departure from the handoff's own chart palette
+// (teal/navy shades pulled from outliers-design-system's chart.seriesA/B/C
+// tokens — all one hue family, varying mostly in lightness). That's a real
+// accessibility problem, not just this app's: the design system doesn't
+// actually define an extended qualitative palette beyond those 3 series
+// colors + a neutral "other", and being brand-derived, any more of them
+// would still be teal/navy variants — exactly what's hard to tell apart
+// under color vision deficiency, which distinguishes hue far less
+// reliably than lightness/saturation.
+//
+// The first 8 colors are Okabe & Ito's colorblind-safe qualitative
+// palette (Wong, "Points of view: Color blindness", Nature Methods 8,
+// 441 (2011) — the standard recommendation for categorical color in
+// scientific/data visualization), chosen to stay distinguishable under
+// the common forms of color vision deficiency (deuteranopia, protanopia,
+// tritanopia) as well as full color vision. Their yellow is darkened
+// from Okabe-Ito's #F0E442 to #B8860B for legibility on our white
+// background (the original assumes a darker or neutral plot background).
+// 4 more hand-picked, well-separated hues extend it past 8 — beyond that
+// point categorical color alone stops being reliable for anyone, so every
+// place this palette is used also shows the ticker symbol as text, never
+// color alone.
 const CHART_PALETTE = [
-  "#2fc7cc", "#001d63", "#008ea0", "#42d4d7", "#64748b",
-  "#2c4d9c", "#00424c", "#94a3b8", "#5f7cbd", "#cbd5e1",
+  "#0072B2", // blue
+  "#E69F00", // orange
+  "#009E73", // bluish green
+  "#D55E00", // vermillion
+  "#CC79A7", // reddish purple
+  "#56B4E9", // sky blue
+  "#B8860B", // dark goldenrod (darkened Okabe-Ito yellow)
+  "#4D4D4D", // dark gray
+  "#A65628", // brown
+  "#F781BF", // pink
+  "#66C2A5", // teal-green
+  "#999999", // light gray
 ];
 
 const PERIOD_WORDS = {
